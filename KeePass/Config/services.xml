@@ -1,0 +1,45 @@
+<?xml version="1.0" ?>
+
+<container xmlns="http://symfony.com/schema/dic/services"
+           xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+           xsi:schemaLocation="http://symfony.com/schema/dic/services http://symfony.com/schema/dic/services/services-1.0.xsd">
+
+    <services>
+
+        <service id="shm" class="\SharedMemory\Controller">
+            <call method="setFileLocation">
+                <argument type="string">%cache_folder%</argument>
+            </call>
+        </service>
+
+        <service id="entity_controller" class="\KeePass\EntityController\Controller">
+            <call method="setShm">
+                <argument type="service" id="shm" />
+            </call>
+            <call method="initialize">
+            </call>
+        </service>
+
+        <service id="keepass" class="KeePass\KeePass">
+            <call method="setDatabase">
+                <argument type="string">%keepass.database%</argument>
+            </call>
+            <call method="setPassword">
+                <argument type="string">%keepass.pwd%</argument>
+            </call>
+            <call method="setKps">
+                <argument type="string">%keepass.kps%</argument>
+            </call>
+            <call method="setMono">
+                <argument type="string">%keepass.mono%</argument>
+            </call>
+            <call method="setEntityController">
+                <argument type="service" id="entity_controller" />
+            </call>
+            <call method="initialise">
+            </call>
+        </service>
+
+
+    </services>
+</container>

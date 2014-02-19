@@ -1,0 +1,25 @@
+{
+    "name": "pbergman/keepass",
+    "description": "KeePass2 database/query helper",
+    "license": "MIT",
+    "autoload": { 
+        "psr-0": { "KeePass\\" : ""   }
+    },
+    "require": {
+        "symfony/process":                  "2.4.*@stable",
+        "symfony/dependency-injection":     "2.4.*@stable",
+        "symfony/config":                   "2.4.*@stable",
+        "symfony/yaml":                     "2.4.*@stable",
+        "pbergman/sharedmemory":            "dev-master"
+
+    },
+    "repositories": [
+        {
+            "type": "vcs",
+            "url": "git@github.com:pbergman/SHMController.git"
+        }
+    ],
+    "minimum-stability": "dev"
+
+
+}
