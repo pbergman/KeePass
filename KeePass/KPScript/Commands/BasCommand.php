@@ -22,7 +22,7 @@ class BasCommand
     static $kpsLocation;
     /** @var string */
     static $dbLocation;
-    /** @var string */
+    /** @var string|callable */
     static $dbPassword;
 
     /** @return string */
@@ -47,11 +47,11 @@ class BasCommand
     }
 
     /**
-     * @param string $dbPassword
+     * @param bool $dbPassword
      */
-    public static function setDbPassword($dbPassword = null)
+    public static function setDbPassword($dbPassword = false)
     {
-        self::$dbPassword = !is_null($dbPassword) ? sprintf('-pw:\'%s\'',$dbPassword) : '-guikeyprompt';
+        self::$dbPassword = $dbPassword;
     }
 
     /**
@@ -72,15 +72,27 @@ class BasCommand
 
     /**
      * execute helper, will also catch if kps returns a error string
+     * and sets password by callback or gui when nothing is set
      *
-     * @param  bool                                            $debug on true will print kps command
+     *
+     * @param  bool         $debug on true will print kps command
      * @return bool|string
      * @throws \KeePass\Exceptions\KeePassScriptErrorException
      */
     public function run($debug = false)
     {
+
+        if (is_callable(self::$dbPassword))  {
+            self::$dbPassword = call_user_func(self::$dbPassword);
+        }
+
+        if (empty(self::$dbPassword)) {
+            self::$dbPassword = '-guikeyprompt';
+        } else {
+            self::$dbPassword =  sprintf('-pw:\'%s\'',self::$dbPassword);
+        }
+
         $command = $this->buildCommand();
-        $return  = false;
 
         if ($debug === true) {
             echo "Running: \n$command\n";
@@ -90,12 +102,11 @@ class BasCommand
         $process->run();
 
         if ( $process->getExitCode() === 0 ||  !preg_match('/E:\s.*/',$process->getOutput()) ) {
-            $return = $process->getOutput();
+            return $process->getOutput();
         } else {
             throw new \KeePass\Exceptions\KeePassScriptErrorException($process);
         }
 
-        return $return;
     }
 
 }

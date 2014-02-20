@@ -16,12 +16,24 @@ use Symfony\Component\DependencyInjection\Loader\XmlFileLoader;
 class Application extends ContainerBuilder
 {
 
-    public function __construct()
+
+    /**
+     * set a callback function t handle password fro KeePass database
+     * if not used will do a gui prompt from keepass to set password
+     *
+     * @param callable $kp_password_callback
+     */
+    public function __construct(callable $kp_password_callback = null)
     {
 
         parent::__construct();
 
         $config = $this->getConfig();
+
+        if ($config['keepass']['pwd'] === false && is_callable($kp_password_callback)) {
+            $config['keepass']['pwd'] = $kp_password_callback;
+        }
+
 
         foreach ($config as $key => $value) {
 

@@ -106,14 +106,18 @@ class ConfigLoader extends BaseFileLoader
     private function checkKeePassConfig($config)
     {
         foreach ($config['keepass'] as $key => $value) {
-            if (!file_exists($value)) {
-                throw new FileNotFoundException(
-                    sprintf(
-                        '[config][%s] File "%s" could not be found.',
-                        $key,
-                        $value
-                    )
-                );
+
+            // Do not check if file exists for password
+            if ($key != 'pwd') {
+                if (!file_exists($value)) {
+                    throw new FileNotFoundException(
+                        sprintf(
+                            '[config][%s] File "%s" could not be found.',
+                            $key,
+                            $value
+                        )
+                    );
+                }
             }
         }
 

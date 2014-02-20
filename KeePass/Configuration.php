@@ -61,6 +61,9 @@ class Configuration implements ConfigurationInterface
                 ->scalarNode('kps')
                     ->defaultValue('@app_folder@/bin/KeePass/KPScript.exe')
                 ->end()
+                ->scalarNode('pwd')
+                    ->defaultFalse()
+                ->end()
              ->end()
           ->end();
 
