@@ -131,7 +131,7 @@ echo $application->get('keepass')
 
 ###GenPw
 
-Generate password bij keepass profile/standard
+Generate password from keepass profile/standard
 
 ```
 echo $container->get('keepass')
