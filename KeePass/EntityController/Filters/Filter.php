@@ -91,18 +91,23 @@ class Filter
 
             /** @var $entity \KeePass\Entity\BaseEntity */
             $entity     = $this->shm->varGet($id);
-            $methodName = sprintf('get%s', implode('', array_map('ucfirst', explode('_', $name))));
 
-            if (method_exists($entity, $methodName)) {
+            if ($entity) {
 
-                $result = call_user_func(array($entity,$methodName));
+                $methodName = sprintf('get%s', implode('', array_map('ucfirst', explode('_', $name))));
 
-                if (false !== $this->compare($value, $result, $comparisonMethod, $caseInsensitive)) {
-                    $this->result[] = $id;
+                if (method_exists($entity, $methodName)) {
+
+                    $result = call_user_func(array($entity,$methodName));
+
+                    if (false !== $this->compare($value, $result, $comparisonMethod, $caseInsensitive)) {
+                        $this->result[] = $id;
+                    }
+
+                } else {
+                    throw new EntityUnknownPropertyException($name, $entity);
                 }
 
-            } else {
-                throw new EntityUnknownPropertyException($name, $entity);
             }
         }
 
