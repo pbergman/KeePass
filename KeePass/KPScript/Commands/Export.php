@@ -8,10 +8,17 @@ namespace KeePass\KPScript\Commands;
 
 /**
  * Class    Export
+ *
+ * This class exports the complete database in given format and given output
+ *
+ * The format is specified by the method setFormat.
+ * The file to export to is specified by the method setOutput.
+ *
  * @package KeePass\KPScript\Commands
  */
 class Export extends BasCommand
 {
+
     const FORMAT_KEEPASS_CSV    = 0;
     const FORMAT_KEEPASS_KDB    = 1;
     const FORMAT_KEEPASS_2_KDBX = 2;
@@ -23,12 +30,16 @@ class Export extends BasCommand
         self::FORMAT_KEEPASS_2_KDBX  => 'KeePass KDBX (2.x)',
         self::FORMAT_KEEPASS_2_XML   => 'KeePass XML (2.x)',
     );
-
+    /** @var string  */
     protected $command = "Export";
-    protected $format;
+    /** @var int|string  */
+    protected $format  = self::FORMAT_KEEPASS_2_XML;
+    /** @var  string */
     protected $output;
 
     /**
+     * builds the command for export that will be called by run
+     *
      * @return string
      * @throws \Exception
      */
@@ -51,39 +62,49 @@ class Export extends BasCommand
     }
 
     /**
-     * @param mixed $output
+     * will set output, can be direct like /dev/stdout or file
+     *
+     * @param   mixed $output
+     *
+     * @return $this
      */
     public function setOutput($output)
     {
         $this->output = $output;
+
+        return $this;
     }
 
     /**
      * will set format default self::FORMAT_KEEPASS_2_XML
      *
-     * @param $format
-     * @throws \KeePass\Exceptions\OptionNotAllowedException
+     * @param   $format
+     *
+     * @return  $this
+     *
+     * @throws  \KeePass\Exceptions\OptionNotAllowedException
      */
     public function setFormat($format)
     {
-        $_format = self::FORMAT_KEEPASS_2_XML;
-
         if (is_numeric($format)) {
 
             if (isset($this->allowedFormats[$format])) {
-                $_format = $this->allowedFormats[$format];
+                $format = $this->allowedFormats[$format];
             } else {
                 throw new \KeePass\Exceptions\OptionNotAllowedException($format, array_keys($this->allowedFormats));
             }
+
         } else {
-            if (in_array($format, $this->allowedFormats)) {
-                $_format = $format;
-            } else {
+
+            if (!in_array($format, $this->allowedFormats)) {
                 throw new \KeePass\Exceptions\OptionNotAllowedException($format, $this->allowedFormats);
             }
+
         }
 
-        $this->format = $_format;
+        $this->format = $format;
+
+        return $this;
     }
 
 }
