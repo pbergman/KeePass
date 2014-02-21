@@ -76,10 +76,11 @@ class BasCommand
      *
      *
      * @param  bool         $debug on true will print kps command
+     * @param  bool         $raw   on true will return raw output
      * @return bool|string
      * @throws \KeePass\Exceptions\KeePassScriptErrorException
      */
-    public function run($debug = false)
+    public function run($debug = false, $raw = false)
     {
 
         if (is_callable(self::$dbPassword))  {
@@ -101,8 +102,8 @@ class BasCommand
         $process = new Process($command);
         $process->run();
 
-        if ( $process->getExitCode() === 0 ||  !preg_match('/E:\s.*/',$process->getOutput()) ) {
-            return $process->getOutput();
+        if ( $process->getExitCode() === 0 && !preg_match('/E:\s.*/',$process->getOutput()) ) {
+            return ($raw) ? $process->getOutput() : trim(preg_replace('/OK: Operation completed successfully./','',$process->getOutput()));
         } else {
             throw new \KeePass\Exceptions\KeePassScriptErrorException($process);
         }
