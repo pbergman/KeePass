@@ -72,3 +72,63 @@ $result  = $groups
 
 print_r($result);             
 ```
+## KeePassScript
+
+Available options:
+
+###Export
+
+Will do a export from the kps database.
+
+Example:
+
+```
+echo $application->get('keepass')
+                 ->getKpScript()
+                 ->get('export')
+                 ->setOutput('/dev/stdout')
+                 ->setFormat(Export::FORMAT_KEEPASS_2_XML)
+                 ->run();
+```
+###GetEntryString
+
+Retrieves the value of an entry string field.
+
+Example:
+```
+echo $application->get('keepass')
+                 ->getKpScript()
+                 ->get('get_entry_string')
+                 ->setField('Password')
+                 ->setRef('UUID','XXXXXXXXXXXXXXXXXXXXXXXX')
+                 ->run();
+```
+Supported field names are e.g. Title, UserName, Password, URL, Notes, etc.
+
+###ListEntries
+
+Export entire entry list
+
+```
+echo $application->get('keepass')
+                 ->getKpScript()
+                 ->get('list_entries')
+                 ->run();
+```
+
+###ListGroups
+
+Export entire group list
+
+```
+$application->get('keepass')
+            ->getKpScript()
+            ->get('list_groups')
+            ->run();
+```
+
+
+
+
+
+
