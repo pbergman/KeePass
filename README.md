@@ -109,7 +109,7 @@ Supported field names are e.g. Title, UserName, Password, URL, Notes, etc.
 
 Export entire entry list
 
-Example
+Example:
 ```
 echo $application->get('keepass')
                  ->getKpScript()
@@ -121,7 +121,7 @@ echo $application->get('keepass')
 
 Export entire group list
 
-Example
+Example:
 ```
 echo $application->get('keepass')
                  ->getKpScript()
