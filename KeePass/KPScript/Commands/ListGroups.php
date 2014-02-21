@@ -8,6 +8,9 @@ namespace KeePass\KPScript\Commands;
 
 /**
  * Class    ListGroups
+ *
+ * This class will return all groups in a format that easily machine-readable.
+ *
  * @package KeePass\KPScript\Commands
  */
 class ListGroups extends BasCommand
