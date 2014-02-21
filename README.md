@@ -129,6 +129,28 @@ echo $application->get('keepass')
                  ->run();
 ```
 
+###GenPw
+
+Generate password bij keepass profile/standard
+
+```
+echo $container->get('keepass')
+               ->getKpScript()
+               ->get('GenPw')
+               ->setCount(5)
+               ->setProfile(GenPw::PROFILE_256_BIT)
+               ->run();
+```
+ Methods setCount and setProfile are optional, on default it will generate 1 password and use profile PROFILE_RANDOM_STRING
+
+ Available profiles:
+
+     PROFILE_40_BIT         40-Bit Hex Key
+     PROFILE_128_BIT        128-Bit Hex Key
+     PROFILE_256_BIT        256-Bit Hex Key,
+     PROFILE_RANDOM_MAC     Random MAC Address,
+     PROFILE_RANDOM_STRING  Generates a random string
+
 
 
 
