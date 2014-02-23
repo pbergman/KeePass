@@ -219,7 +219,7 @@ class KeePass
 
             foreach ($subGroup  as $sub) {
 
-                $groups[] = $this->convertUuid($sub->UUID);
+                $groups[$this->convertUuid($sub->UUID)] = $this->formatName(sprintf("%s::%s", $namespace, (string) $sub->Name ));
 
             }
 
@@ -266,7 +266,7 @@ class KeePass
                 $ee->setNamespace(sprintf("%s::%s", $namespace, $this->formatName($ee->getName())));
                 $ec->saveEntity($ee);
 
-                $return[] = $ee->getUuid();
+                $return[$ee->getUuid()] = $ee->getNamespace();
             }
 
         }

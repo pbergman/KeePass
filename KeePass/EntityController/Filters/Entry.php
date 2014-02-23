@@ -78,12 +78,17 @@ class Entry extends Filter
 
             /** @var $entity \KeePass\Entity\Entry */
             $entity     = $this->shm->varGet($id);
-            $data       = $entity->getData();
 
-            if (isset($data[$name])) {
+            if ($entity) {
 
-                if (false !== $this->compare($value, $data[$name], $comparisonMethod, $caseInsensitive)) {
-                    $this->result[] = $id;
+                $data       = $entity->getData();
+
+                if (isset($data[$name])) {
+
+                    if (false !== $this->compare($value, $data[$name], $comparisonMethod, $caseInsensitive)) {
+                        $this->result[] = $id;
+                    }
+
                 }
 
             }
@@ -113,13 +118,14 @@ class Entry extends Filter
                 $result[$group] = $group;
             }
         }
+
         $result     = array_values($result);
         $controller = new Controller();
         $controller->setShm($this->shm);
+
         /** @var Group $entry */
-        $entry = $controller->getEntities('group');
-        $entry->setEntities(array_flip($result));
-        $entry->setResult($result);
+        $entry = $controller->getEntities('group')
+                            ->setEntities($result);
 
         return $entry;
     }

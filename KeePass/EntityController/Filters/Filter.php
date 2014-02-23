@@ -80,35 +80,53 @@ class Filter
      */
     public function where($name, $value, $comparisonMethod = '=', $caseInsensitive = false)
     {
-
         $this->result = array();
 
         if (!in_array($comparisonMethod, $this->operators)) {
             throw new InvalidComparisonOperatorException($comparisonMethod,  $this->operators);
         }
 
-        foreach ( array_keys($this->entities) as $id ) {
-
-            /** @var $entity \KeePass\Entity\BaseEntity */
-            $entity     = $this->shm->varGet($id);
-
-            if ($entity) {
-
-                $methodName = sprintf('get%s', implode('', array_map('ucfirst', explode('_', $name))));
-
-                if (method_exists($entity, $methodName)) {
-
-                    $result = call_user_func(array($entity,$methodName));
-
-                    if (false !== $this->compare($value, $result, $comparisonMethod, $caseInsensitive)) {
+        switch ($name) {
+            case 'namespace':
+                foreach ( $this->entities as $id => $namespace ) {
+                    if (false !== $this->compare($value, $namespace, $comparisonMethod, $caseInsensitive)) {
                         $this->result[] = $id;
                     }
-
-                } else {
-                    throw new EntityUnknownPropertyException($name, $entity);
                 }
+                break;
+            case 'uuid':
+                foreach ( array_keys($this->entities) as $id ) {
+                    if (false !== $this->compare($value, $id, $comparisonMethod, $caseInsensitive)) {
+                        $this->result[] = $id;
+                    }
+                }
+                break;
+            default:
+                foreach ( array_keys($this->entities) as $id ) {
 
-            }
+                    /** @var $entity \KeePass\Entity\BaseEntity */
+                    $entity     = $this->shm->varGet($id);
+
+                    if ($entity) {
+
+                        $methodName = sprintf('get%s', implode('', array_map('ucfirst', explode('_', $name))));
+
+                        if (method_exists($entity, $methodName)) {
+
+                            $result = call_user_func(array($entity,$methodName));
+
+                            if (false !== $this->compare($value, $result, $comparisonMethod, $caseInsensitive)) {
+                                $this->result[] = $id;
+                            }
+
+                        } else {
+                            throw new EntityUnknownPropertyException($name, $entity);
+                        }
+
+                    }
+
+                }
+                break;
         }
 
         return $this;
@@ -254,10 +272,18 @@ class Filter
      * entities to search through
      *
      * @param mixed $entities
+     *
+     * @return $this
      */
     public function setEntities($entities)
     {
         $this->entities = $entities;
+
+        if (!empty($entities)) {
+            $this->setResult(array_values(array_flip($entities)));
+        }
+
+        return $this;
     }
 
     /**
@@ -270,9 +296,13 @@ class Filter
 
     /**
      * @param \SharedMemory\Controller $shm
+     *
+     * @return $this
      */
     public function setShm(\SharedMemory\Controller $shm)
     {
         $this->shm = $shm;
+
+        return $this;
     }
 }
