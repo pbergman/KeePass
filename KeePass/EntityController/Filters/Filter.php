@@ -109,11 +109,9 @@ class Filter
 
                     if ($entity) {
 
-                        $methodName = sprintf('get%s', implode('', array_map('ucfirst', explode('_', $name))));
+                        if (method_exists($entity, $this->formatGetMethodName($name))) {
 
-                        if (method_exists($entity, $methodName)) {
-
-                            $result = call_user_func(array($entity,$methodName));
+                            $result = call_user_func(array($entity, $this->formatGetMethodName($name)));
 
                             if (false !== $this->compare($value, $result, $comparisonMethod, $caseInsensitive)) {
                                 $this->result[] = $id;
@@ -201,6 +199,90 @@ class Filter
 
         return (bool) $return;
 
+    }
+
+    /**
+     * will do a search on all properties from entity
+     * will try to match it like 'where like' function
+     *
+     * @param   string    $search   search pattern, wildcards are % for begin or end
+     * @param   bool      $ci       case insensitive
+     *
+     * @return  $this
+     *
+     * @throws \Exception
+     */
+    public function search($search, $ci = false)
+    {
+        $result = array();
+
+        if (!empty($this->result)) {
+
+            foreach ($this->result as $id) {
+
+                /** @var \KeePass\Entity\BaseEntity $entity */
+                $entity     = $this->shm->varGet($id);
+
+                if ($entity) {
+
+                    $entityRef  = new \ReflectionClass($entity);
+                    $properties = array_merge($entityRef->getParentClass()->getProperties(), $entityRef->getProperties());
+
+                    foreach ( $properties as $property ){
+
+                        $propertyValue = call_user_func(array($entity, $this->formatGetMethodName($property->name)));
+
+                        switch (gettype($propertyValue)) {
+                            case 'array':
+                                foreach ( $propertyValue  as $value ){
+                                    if ($this->compare($search, $value, 'like', $ci) === true ) {
+                                        $result[] = $id;
+                                        break 2;
+                                    }
+                                }
+                                break;
+                            case 'object':
+                                switch (get_class($propertyValue)){
+                                    case 'DateTime':
+                                        /** @var \DateTime $propertyValue */
+                                        if ($this->compare($search, $propertyValue->format('Y-m-d H:i:s'), 'like', $ci) === true ) {
+                                                $result[] = $id;
+                                                break 2;
+                                        }
+                                        break;
+                                }
+                                break;
+                            case 'integer':
+                            case 'boolean':
+                            case 'double':
+                                if ($this->compare($search, $propertyValue) === true ) {
+                                    $result[] = $id;
+                                    break;
+                                }
+                                break;
+                            case 'string':
+                                if ($this->compare($search, $propertyValue, 'like', $ci) === true ) {
+                                    $result[] = $id;
+                                    break;
+                                }
+                                break;
+                            default:
+                                throw new \Exception(sprintf('Unsupported format for comparison: %s', gettype($propertyValue)));
+                                break;
+
+                        }
+
+                    }
+
+                }
+
+            }
+
+            $this->result = $result;
+
+        }
+
+        return $this;
     }
 
     /**
@@ -312,5 +394,16 @@ class Filter
         $this->shm = $shm;
 
         return $this;
+    }
+
+    /**
+     * will return formatted get name
+     *
+     * @param   string $name   name of property
+     * @return  string
+     */
+    protected function formatGetMethodName($name)
+    {
+        return sprintf('get%s', implode('', array_map('ucfirst', explode('_', $name))));
     }
 }
