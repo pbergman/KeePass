@@ -178,16 +178,15 @@ class Controller
         switch ($type) {
             case 'entry':
                 $return = new Filters\Entry();
-                $return->setShm($this->shm);
-                $return->setEntities($this->entries);
+                $return->setShm($this->shm)
+                       ->setEntities($this->entries);
                 break;
             case 'group':
                 $return = new Filters\Group();
-                $return->setShm($this->shm);
-                $return->setEntities($this->groups);
+                $return->setShm($this->shm)
+                       ->setEntities($this->groups);
                 break;
         }
-
         return $return;
 
     }

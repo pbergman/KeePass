@@ -27,4 +27,4 @@
 #
 ####
 keepass:
-  database: 'put here location of keepass db file'
+  database: '/home/philip/NetworkShares/zon/projecten/ZZtechniek_techniek/KeePass/sites.kdbx'

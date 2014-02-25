@@ -40,10 +40,8 @@ class Group extends Filter
         $controller = new Controller();
         $controller->setShm($this->shm);
         /** @var Entry $entry */
-        $entry = $controller->getEntities('entry');
-        $entry->setEntities(array_flip($result));
-        $entry->setResult($result);
-
+        $entry = $controller->getEntities('entry')
+                            ->setEntities($result);
         return $entry;
     }
 
@@ -79,8 +77,7 @@ class Group extends Filter
             }
         }
 
-        $this->setEntities(array_flip($result));
-        $this->setResult($result);
+        $this->setEntities($result);
 
         return $this;
     }
