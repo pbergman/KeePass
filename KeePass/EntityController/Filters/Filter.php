@@ -19,7 +19,7 @@ class Filter
     /** @var array  */
     protected $result    = array();
     /** @var array  */
-    protected $operators = array('=', '!=', '<', '<=', '<>', '>', '>=', 'like');
+    protected $operators = array('=', '!=', '<', '<=', '<>', '>', '>=', 'like', 'in');
     /** @var \SharedMemory\Controller */
     protected $shm       = null;
 
@@ -68,11 +68,11 @@ class Filter
     }
 
     /**
-     * @param  string   $name             the key name of the object witch has to have to match $value
-     * @param  string   $value            the value that has to match
-     * @param  string   $comparisonMethod the method of comparison
-     * @param  bool     $caseInsensitive  set to true when needed to check case insensitive
-     *     *
+     * @param  string           $name             the key name of the object witch has to have to match $value
+     * @param  array|string     $value            the value that has to match
+     * @param  string           $comparisonMethod the method of comparison
+     * @param  bool             $caseInsensitive  set to true when needed to check case insensitive
+     *
      * @return $this
      *
      * @throws \KeePass\Exceptions\InvalidComparisonOperatorException
@@ -98,7 +98,7 @@ class Filter
 
                 if (method_exists($entity, $methodName)) {
 
-                    $result = call_user_func(array($entity,$methodName));
+                    $result = call_user_func(array($entity, $methodName));
 
                     if (false !== $this->compare($value, $result, $comparisonMethod, $caseInsensitive)) {
                         $this->result[] = $id;
@@ -127,6 +127,7 @@ class Filter
      * @return bool
      *
      * @throws \KeePass\Exceptions\InvalidComparisonOperatorException
+     * @throws \InvalidArgumentException
      */
     protected function compare($a, $b, $cm = '=', $ci = false)
     {
@@ -170,6 +171,13 @@ class Filter
                 break;
             case '<=':
                 $return = ($a <= $b);
+                break;
+            case 'in':
+                if (!is_array($b)) {
+                    throw new \InvalidArgumentException('the data to compare needs to by an array! for comparison method \'in\'');
+                } else {
+                    return in_array($a, $b);
+                }
                 break;
         }
 
