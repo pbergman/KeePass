@@ -237,7 +237,7 @@ class Filter
                                 foreach ( $propertyValue  as $value ){
                                     if ($this->compare($search, $value, 'like', $ci) === true ) {
                                         $result[] = $id;
-                                        break 2;
+                                        break 4;
                                     }
                                 }
                                 break;
@@ -247,7 +247,7 @@ class Filter
                                         /** @var \DateTime $propertyValue */
                                         if ($this->compare($search, $propertyValue->format('Y-m-d H:i:s'), 'like', $ci) === true ) {
                                                 $result[] = $id;
-                                                break 2;
+                                                break 4;
                                         }
                                         break;
                                 }
