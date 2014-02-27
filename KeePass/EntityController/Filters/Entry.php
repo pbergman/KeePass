@@ -77,11 +77,11 @@ class Entry extends Filter
         foreach ( array_keys($this->entities) as $id ) {
 
             /** @var $entity \KeePass\Entity\Entry */
-            $entity     = $this->shm->varGet($id);
+            $entity = $this->shm->varGet($id);
 
             if ($entity) {
 
-                $data       = $entity->getData();
+                $data = $entity->getData();
 
                 if (isset($data[$name])) {
 
@@ -111,8 +111,8 @@ class Entry extends Filter
         foreach ($this->result as $id) {
 
             /** @var $entry \KeePass\Entity\Entry */
-            $entry    = $this->shm->varGet($id);
-            $group    = $entry->getGroup();
+            $entry = $this->shm->varGet($id);
+            $group = $entry->getGroup();
 
             if (!isset($result[$group])) {
                 $result[$group] = $group;
