@@ -1,0 +1,30 @@
+####
+#    |  /               _ \                      ___|  | _)
+#    ' /    _ \   _ \  |   |  _` |   __|   __|  |      |  |
+#    . \    __/   __/  ___/  (   | \__ \ \__ \  |      |  |
+#   _|\_\ \___| \___| _|    \__,_| ____/ ____/ \____| _| _|
+#     ___|                 _| _)
+#    |       _ \   __ \   |    |   _` |
+#    |      (   |  |   |  __|  |  (   |
+#   \____| \___/  _|  _| _|   _| \__, |
+#                                |___/
+# @author    Philip Bergman <pbergman@live.nl>
+# @copyright Philip Bergman
+#
+# This is the main config file,Configuration.php
+#
+# use %VAR% if you want to replace it with a environment variable
+# example :
+# %USER% will be replace with getEnv('USER')
+#
+# use @VAR@ if you want to replace it with the value from this config
+# example :
+# data_folder: '/some_folder/'
+# cache_folder: @data_folder@some_other_folder/
+#
+# and cache_folder will be /some_folder/some_other_folder/
+# to go deeper in array use . to separate key values
+#
+####
+keepass:
+  database: '/home/philip/NetworkShares/zon/projecten/ZZtechniek_techniek/KeePass/sites.kdbx'

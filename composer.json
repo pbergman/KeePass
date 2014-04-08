@@ -3,7 +3,7 @@
     "description": "KeePass2 database/query helper",
     "license": "MIT",
     "autoload": { 
-        "psr-0": { "KeePass\\" : ""   }
+        "psr-0": { "PBergman\\KeePass\\" : ""   }
     },
     "require": {
         "symfony/process":                  "2.4.*@stable",
