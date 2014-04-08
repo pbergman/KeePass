@@ -378,7 +378,7 @@ class Filter
     }
 
     /**
-     * @return \SharedMemory\Controller
+     * @return \PBergman\SharedMemory\Controller
      */
     public function getShm()
     {
@@ -386,11 +386,11 @@ class Filter
     }
 
     /**
-     * @param \SharedMemory\Controller $shm
+     * @param \PBergman\SharedMemory\Controller $shm
      *
      * @return $this
      */
-    public function setShm(\SharedMemory\Controller $shm)
+    public function setShm(\PBergman\SharedMemory\Controller $shm)
     {
         $this->shm = $shm;
 
