@@ -267,6 +267,12 @@ class Filter
                                     break 2;
                                 }
                                 break;
+                            case 'NULL':
+                                if ($this->compare($search, "") === true) {
+                                    $result[] = $id;
+                                    break 2;
+                                }
+                                break;
                             default:
                                 throw new \Exception(sprintf('Unsupported format for comparison: %s', gettype($propertyValue)));
                                 break;
