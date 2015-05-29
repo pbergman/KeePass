@@ -8,6 +8,7 @@ namespace PBergman\KeePass\Headers\V2;
 use PBergman\KeePass\Database\StreamWrapper;
 use PBergman\KeePass\Headers\AbstractHeader;
 use PBergman\KeePass\KeePass;
+use PBergman\KeePass\Streams\AbstractStreamWrapper;
 
 class Header extends AbstractHeader
 {
@@ -40,29 +41,24 @@ class Header extends AbstractHeader
     }
 
     /**
-     * @param   resource    $fd
+     * @param   AbstractStreamWrapper   $buffer
      * @return  $this
-     *
      * @throws  HeaderException
      */
-    public function read($fd)
+    public function read(AbstractStreamWrapper $buffer)
     {
-        if (!is_resource($fd)) {
-            throw new \InvalidArgumentException(sprintf('Expected a resource got %s', gettext($fd)));
-        }
-
-        $ret = unpack('Lver', fread($fd, 4));
+        $ret = unpack('Lver', $buffer->read(4));
         $this[self::VER] = $ret['ver'];
         if ($this[self::VER] & 0xFFFF0000 > 0x00020000 & 0xFFFF0000) {
             HeaderException::unsupportedVersion($this[self::VER]);
         }
         $headerSize = 12; // L(4) => sig1, L(4) => sig2 & L(4) => ver
         while (true) {
-            $content = fread($fd, 3);
+            $content = $buffer->read(3);
             $ret = unpack('Ctype/Ssize', $content);
             $type = $ret['type'];
             $size = $ret['size'];
-            $value = fread($fd, $size);
+            $value = $buffer->read($size);
             if (empty($type)) {
                 $this[0] = $value;
                 $headerSize += $size + 3;

@@ -5,13 +5,13 @@
  */
 namespace PBergman\KeePass\Headers;
 
+use PBergman\KeePass\Streams\AbstractStreamWrapper;
+
 interface HeaderInterface
 {
     /**
-     * read from header from resource
-     *
-     * @param  resource $fd
-     * @return $this
+     * @param   AbstractStreamWrapper   $buffer
+     * @return  $this
      */
-    public function read($fd);
+    public function read(AbstractStreamWrapper $buffer);
 }

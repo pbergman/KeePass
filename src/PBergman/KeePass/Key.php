@@ -41,7 +41,7 @@ class Key
      * @param AbstractHeader    $header
      * @return Key
      */
-    static function getMasterKeyByHeader($password, AbstractHeader $header)
+    static function generate($password, AbstractHeader $header)
     {
         return new self(
             $password,

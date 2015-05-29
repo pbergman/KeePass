@@ -5,9 +5,8 @@
  */
 namespace PBergman\KeePass\Headers\V1;
 
-use PBergman\KeePass\Database\StreamWrapper;
 use PBergman\KeePass\Headers\AbstractHeader;
-use PBergman\KeePass\KeePass;
+use PBergman\KeePass\Streams\AbstractStreamWrapper;
 
 class Header extends AbstractHeader
 {
@@ -41,21 +40,18 @@ class Header extends AbstractHeader
     }
 
     /**
-     * @inheritdoc
+     * @param   AbstractStreamWrapper $buffer
+     * @throws  HeaderException
+     * @return  $this
      */
-    public function read($fd)
+    public function read(AbstractStreamWrapper $buffer)
     {
-        if (!is_resource($fd)) {
-            throw new \InvalidArgumentException(sprintf('Expected a resource got %s', gettext($fd)));
+
+        if (count($buffer) <  $this[self::HEADER_SIZE]) {
+            throw HeaderException::invalidFileSize(count($buffer));
         }
 
-        $stats = fstat($fd);
-
-        if ($stats['size'] <  $this[self::HEADER_SIZE]) {
-            throw HeaderException::invalidFileSize($stats);
-        }
-
-        $ret = unpack('Lflags/Lver/a16seed_rand/a16enc_iv/Ln_groups/Ln_entries/a32checksum/a32seed_key/Lrounds', fread($fd, 116));
+        $ret = unpack('Lflags/Lver/a16seed_rand/a16enc_iv/Ln_groups/Ln_entries/a32checksum/a32seed_key/Lrounds', $buffer->read(116));
 
         foreach($ret as $key => $value) {
             $this[$key] = $value;

@@ -19,8 +19,6 @@ abstract class AbstractHeader extends \SplFixedArray implements HeaderInterface
     const HEADER_SIZE = 7;
     const ENC_TYPE = 8;
 
-
-
     /**
      * @inheritdoc
      */

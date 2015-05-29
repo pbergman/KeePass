@@ -5,6 +5,11 @@
  */
 namespace PBergman\KeePass\Headers\V2;
 
+/**
+ * Class HeaderException
+ *
+ * @package PBergman\KeePass\Headers\V2
+ */
 class HeaderException extends \Exception
 {
     /**
