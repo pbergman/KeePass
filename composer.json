@@ -1,25 +1,21 @@
 {
     "name": "pbergman/keepass",
-    "description": "KeePass2 database/query helper",
+    "type": "library",
+    "description": "a keepass lib for php",
+    "keywords": ["keepass"],
     "license": "MIT",
-    "autoload": { 
-        "psr-0": { "PBergman\\KeePass\\" : ""   }
-    },
-    "require": {
-        "symfony/process":                  "2.4.*@stable",
-        "symfony/dependency-injection":     "2.4.*@stable",
-        "symfony/config":                   "2.4.*@stable",
-        "symfony/yaml":                     "2.4.*@stable",
-        "pbergman/sharedmemory":            "dev-master"
-
-    },
-    "repositories": [
+    "authors": [
         {
-            "type": "vcs",
-            "url": "git@github.com:pbergman/SHMController.git"
+            "name": "Philip Bergman",
+            "email": "pbergman@live.nl"
         }
     ],
-    "minimum-stability": "dev"
-
-
+    "require": {
+        "php": ">=5.4.0"
+    },
+    "autoload": {
+        "psr-0": {
+            "PBergman": "src"
+        }
+    }
 }
