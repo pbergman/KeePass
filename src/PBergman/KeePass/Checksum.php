@@ -1,8 +1,8 @@
 <?php
 /**
- * @author    Philip Bergman <philip@zicht.nl>
- * @copyright Zicht Online <http://www.zicht.nl>
- */
+* @author    Philip Bergman <pbergman@live.nl>
+* @copyright Philip Bergman
+*/
 namespace PBergman\KeePass;
 
 /**
