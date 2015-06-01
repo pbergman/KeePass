@@ -9,14 +9,26 @@
 require_once 'vendor/autoload.php';
 
 
-$s = new \PBergman\KeePass\Nodes\V2\String();
-$s->setValue('ddd');
-echo $s->getValue();
-$s->setKey('aaa');
-var_dump($s->getElement()->asXML());
-exit;
+$group = new \PBergman\KeePass\Nodes\V2\Group();
+var_dump((string) $group);exit;
 
-$k = new PBergman\KeePass\KeePass();
+//
+//$string = new \PBergman\KeePass\Nodes\V2\String();
+//$string
+//    ->setKey('foo')
+//    ->setValue('bar');
+//var_dump((string)$string, $string);exit;
+
+
+
+////$time = new  \PBergman\KeePass\Nodes\V2\Times();
+////var_dump((string)$time, $time);exit;
+//$e = new \SimpleXMLElement('<Group />');
+//$e->UUID = 'sddd';
+//$e->Name ='foo';
+//
+//var_dump(property_exists($e, 'UUIDS'),$e->asXML());exit;
+//$k = new PBergman\KeePass\KeePass();
 
 
 
