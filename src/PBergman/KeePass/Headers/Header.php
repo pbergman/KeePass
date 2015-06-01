@@ -24,7 +24,7 @@ class Header
      * @throws  HeaderException
      * @return  null|HeaderV2|HeaderV1
      */
-    static function parseHeader(AbstractStreamWrapper $buffer)
+    static function parseStream(AbstractStreamWrapper $buffer)
     {
         $sig = unpack('L2',  $buffer->read(8));
         $header = null;

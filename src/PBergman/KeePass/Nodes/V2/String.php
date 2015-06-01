@@ -10,36 +10,15 @@ namespace PBergman\KeePass\Nodes\V2;
  * Class String
  *
  * @package PBergman\KeePass\Nodes\V2
- * @method  string      setValue
+ *
+ * @method  $this       setValue
+ * @method  $this       setKey
+ *
  * @method  string      getValue
- * @method  string      setKey
  * @method  string      getKey
  */
-class String
+class String extends AbstractNode
 {
-    /** @var \SimpleXMLElement */
-    protected $element;
-
-    function __construct(\SimpleXMLElement $element = null)
-    {
-        if (is_null($element)) {
-            $this->element = new \SimpleXMLElement($this->getDefault());
-        } else {
-            $this->element = $element;
-        }
-    }
-
-    public function getDefault()
-    {
-        return <<<EOL
-    <String>
-        <Key />
-        <Value />
-    </String>
-EOL;
-    }
-
-
     /**
      * @param   string      $name
      * @param   array       $arguments
@@ -63,10 +42,12 @@ EOL;
     }
 
     /**
+     * returns the default xml that specifies this node
+     *
      * @return \SimpleXMLElement
      */
-    public function getElement()
+    protected function getDefaultElement()
     {
-        return $this->element;
+        return new \SimpleXMLElement('<String><Key /><Value /></String>');
     }
 }

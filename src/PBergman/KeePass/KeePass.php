@@ -21,7 +21,7 @@ class KeePass
     public function loadFile($file, $password)
     {
         $buffer = new Streams\FileStream($file);
-        $header = Header::parseHeader($buffer);
+        $header = Header::parseStream($buffer);
 
         switch ($header[$header::VERSION]) {
             case 1:
