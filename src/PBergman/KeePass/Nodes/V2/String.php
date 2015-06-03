@@ -19,6 +19,8 @@ namespace PBergman\KeePass\Nodes\V2;
  */
 class String extends AbstractNode
 {
+    const ROOT_ELEMENT_NAME = 'String';
+
     /**
      * @param   string      $name
      * @param   array       $arguments
@@ -29,10 +31,10 @@ class String extends AbstractNode
         if (preg_match('#^(?P<method>get|set)(?P<name>Key|Value)$#', $name, $ret)) {
             switch ($ret['method']) {
                 case 'get':
-                    return (string) $this->element->$ret['name'];
+                    return (string) $this->element->getElementsByTagName($ret['name'])->item(0)->textContent;
                     break;
                 case 'set':
-                    $this->element->$ret['name'] = $arguments[0];
+                    $this->element->getElementsByTagName($ret['name'])->item(0)->textContent = $arguments[0];
                     return $this;
                     break;
             }
@@ -42,12 +44,44 @@ class String extends AbstractNode
     }
 
     /**
-     * returns the default xml that specifies this node
+     * returns the default dom node
      *
-     * @return \SimpleXMLElement
+     * @return \DomElement
      */
-    protected function getDefaultElement()
+    protected function buildDefaultDomElement()
     {
-        return new \SimpleXMLElement('<String><Key /><Value /></String>');
+        $string = $this->dom->createElement(self::ROOT_ELEMENT_NAME);
+        $string->appendChild($this->dom->createElement('Key'));
+        $string->appendChild($this->dom->createElement('Value'));
+        return $string;
+    }
+
+    /**
+     * will return a validate schema for xml
+     *
+     * @return string
+     */
+    protected function getValidateSchema()
+    {
+        return '
+        <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+          <xs:element name="Strings">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element type="xs:string" name="Key"/>
+                <xs:element name="Value">
+                  <xs:complexType>
+                    <xs:simpleContent>
+                      <xs:extension base="xs:string">
+                        <xs:attribute type="xs:string" name="Protected"/>
+                      </xs:extension>
+                    </xs:simpleContent>
+                  </xs:complexType>
+                </xs:element>
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:schema>
+        ';
     }
 }

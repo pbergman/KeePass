@@ -11,67 +11,164 @@ namespace PBergman\KeePass\Nodes\V2;
  *
  * @package PBergman\KeePass\Nodes\V2
  *
+ * @method  $this       setUUID
+ * @method  $this       setName
+ * @method  $this       setNotes
+ * @method  $this       setIconID
+ * @method  $this       setDefaultAutoTypeSequence
+ * @method  $this       setEnableAutoType
+ * @method  $this       setEnableSearching
+ * @method  $this       setLastTopVisibleEntry
+ * @method  $this       setIsExpanded
+ *
+ * @method  string      getUUID
+ * @method  string      getName
+ * @method  string      getNotes
+ * @method  string      getIconID
+ * @method  string      getDefaultAutoTypeSequence
+ * @method  string      getEnableAutoType
+ * @method  string      getEnableSearching
+ * @method  string      getLastTopVisibleEntry
+ * @method  bool        getIsExpanded
  */
 class Group extends AbstractNode
 {
+    const ROOT_ELEMENT_NAME = 'Group';
 
     /**
-     * returns the default xml that specifies this node
+     * returns the default dom node
      *
-     * @return \SimpleXMLElement
+     * @return \DomElement
      */
-    protected function getDefaultElement()
+    protected function buildDefaultDomElement()
     {
-        $element = new \SimpleXMLElement('<Group />');
-        $element->addChild('UUID');
-        $element->addChild('Name');
-        $element->addChild('Notes');
-        $element->addChild('Times');
-        $element->addChild('IsExpanded');
-        $element->addChild('DefaultAutoTypeSequence');
-        $element->addChild('EnableAutoType');
-        $element->addChild('LastTopVisibleEntry');
+        $group = $this->dom->createElement(self::ROOT_ELEMENT_NAME);
+        $group->appendChild($this->dom->createElement('UUID'));
+        $group->appendChild($this->dom->createElement('Name'));
+        $group->appendChild($this->dom->createElement('Notes'));
+        $group->appendChild($this->dom->createElement('IconID'));
+        $group->appendChild((new Times(null, $this->dom))->getElement());
+        $group->appendChild($this->dom->createElement('IsExpanded', $this->stringify(true)));
+        $group->appendChild($this->dom->createElement('DefaultAutoTypeSequence'));
+        $group->appendChild($this->dom->createElement('EnableAutoType', $this->stringify(null)));
+        $group->appendChild($this->dom->createElement('EnableSearching', $this->stringify(null)));
+        $group->appendChild($this->dom->createElement('LastTopVisibleEntry'));
+        return $group;
+    }
 
-        $dom = new \DOMDocument();
-        $group = $dom->createElement('group');
-        var_dump($group, dom_import_simplexml($element));exit;
-        $dom->appendChild();
-        var_dump($dom->C14N());exit;
+    /**
+     * will return a validate schema for xml
+     *
+     * @return string
+     */
+    protected function getValidateSchema()
+    {
+        return '
+        <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+          <xs:element name="Group">
+            <xs:complexType>
+              <xs:sequence>
+                <xs:element type="xs:string" name="UUID" />
+                <xs:element type="xs:string" name="Name"/>
+                <xs:element type="xs:string" name="Notes"/>
+                <xs:element type="xs:string" name="IconID"/>
+                <xs:element name="Times" />
+                <xs:element type="xs:string" name="IsExpanded"/>
+                <xs:element type="xs:string" name="DefaultAutoTypeSequence"/>
+                <xs:element type="xs:string" name="EnableAutoType"/>
+                <xs:element type="xs:string" name="EnableSearching"/>
+                <xs:element type="xs:string" name="LastTopVisibleEntry"/>
+                <xs:element name="Entry" maxOccurs="unbounded" minOccurs="0" />
+                <xs:element name="Group" maxOccurs="unbounded" minOccurs="0" />
+              </xs:sequence>
+            </xs:complexType>
+          </xs:element>
+        </xs:schema>
+        ';
+    }
 
-//        $dom = dom_import_simplexml($element);
-//        $dom->create
-//        $dom->appendChild((new \DOMNode())->nodeName = 'foo');
-//        $uuid = new \DOMElement('UUID');
-//        $name = new \DOMElement('Name');
-//        $notes = new \DOMElement('Notes');
-//        $times = new \DOMElement('Times');
-//        $times->
-//        $uuid = new \DOMElement('IsExpanded');
-//        $uuid = new \DOMElement('DefaultAutoTypeSequence');
-//        $uuid = new \DOMElement('EnableAutoType');
-//        $uuid = new \DOMElement('LastTopVisibleEntry');
-//
+    /**
+     * @param   string      $name
+     * @param   array       $arguments
+     * @return $this|string
+     */
+    public function __call($name, $arguments)
+    {
 
-        return $element;
+        if (preg_match('#^(?P<method>get|set)(?P<name>.+)$#', $name, $ret)) {
+            switch ($ret['method']) {
+                case 'get':
+                    $value = $this->element->getElementsByTagName($ret['name'])->item(0)->textContent;
+                    switch($ret['name']) {
+                        case 'UUID':
+                        case 'Name':
+                        case 'Notes':
+                        case 'IconID':
+                        case 'DefaultAutoTypeSequence':
+                        case 'EnableAutoType':
+                        case 'EnableSearching':
+                        case 'LastTopVisibleEntry':
+                            return $value;
+                            break;
+                        case 'IsExpanded':
+                            return ($value === 'True') ? true : false;
+                            break;
+                        default:
+                            throw new \RuntimeException(sprintf('Calling to undefined method: "%s"', $name));
 
+                    }
+                    break;
+                case 'set':
+                    switch($ret['name']) {
+                        case 'UUID':
+                        case 'Name':
+                        case 'Notes':
+                        case 'IconID':
+                        case 'DefaultAutoTypeSequence':
+                        case 'EnableAutoType':
+                        case 'EnableSearching':
+                        case 'LastTopVisibleEntry':
+                            $value =  $arguments[0];
+                            break;
+                        case 'IsExpanded':
+                            $value = $this->stringify($arguments[0]);
+                            break;
+                        default:
+                            throw new \RuntimeException(sprintf('Calling to undefined method: "%s"', $name));
+
+                    }
+                    $this->element->getElementsByTagName($ret['name'])->item(0)->textContent = $value;
+                    return $this;
+                    break;
+            }
+        } else {
+            throw new \RuntimeException(sprintf('Calling to undefined method: "%s"', $name));
+        }
+    }
+
+    /**
+     * @return Times
+     */
+    public function getTimes()
+    {
+        return new Times(
+            $this->element->getElementsByTagName('Times')->item(0),
+            $this->dom
+        );
+    }
+
+    /**
+     * @param   Times $times
+     *
+     * @return  $this
+     */
+    public function setTimes(Times $times)
+    {
+        $this->element->replaceChild(
+            $this->dom->importNode($times->getElement(), true),
+            $this->element->getElementsByTagName('Times')->item(0)
+        );
+
+        return $this;
     }
 }
-
-//<UUID>HyAro1dG50GtpHNstre0dA==</UUID>
-//<Name>Accounts</Name>
-//<Notes />
-//<IconID>58</IconID>
-//<Times>
-//    <CreationTime>2013-09-18T10:18:27Z</CreationTime>
-//    <LastModificationTime>2013-09-18T10:18:58Z</LastModificationTime>
-//    <LastAccessTime>2015-03-03T13:38:02Z</LastAccessTime>
-//    <ExpiryTime>2013-09-17T22:00:00Z</ExpiryTime>
-//    <Expires>False</Expires>
-//    <UsageCount>34</UsageCount>
-//    <LocationChanged>2013-09-18T10:19:05Z</LocationChanged>
-//</Times>
-//<IsExpanded>True</IsExpanded>
-//<DefaultAutoTypeSequence />
-//<EnableAutoType>null</EnableAutoType>
-//<EnableSearching>null</EnableSearching>
-//<LastTopVisibleEntry>ysecpf47WU6+dtIFOPxVBQ==</LastTopVisibleEntry>

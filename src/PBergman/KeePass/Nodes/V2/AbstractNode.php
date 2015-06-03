@@ -13,54 +13,109 @@ namespace PBergman\KeePass\Nodes\V2;
  */
 abstract class AbstractNode
 {
-    /** @var \SimpleXMLElement */
+    /** @var \DOMDocument  */
+    protected $dom;
+    /** @var \DomElement */
     protected $element;
+    /** @var string */
+    const ROOT_ELEMENT_NAME = null;
 
     /**
-     * @param \SimpleXMLElement $element
+     * @param \DomElement $element
      */
-    function __construct(\SimpleXMLElement $element = null)
+    function __construct(\DomElement $element = null, \DOMDocument $dom = null, $validate = true)
     {
-        if (is_null($element)) {
-            $element = $this->getDefaultElement();
-            if ($element instanceof \SimpleXMLElement) {
-                $this->element = $element;
-            } else {
-                throw new \RuntimeException('The method (getDefaultElement) should return a instance of SimpleXMLElement');
-            }
+        if (!$dom) {
+            $this->dom = new \DOMDocument('1.0', 'UTF-8');
+            $this->dom->preserveWhiteSpace = false;
+            $this->dom->formatOutput = true;
+        } else {
+            $this->dom = $dom;
+        }
 
+        if (!$element) {
+            $this->element = $this->buildDefaultDomElement();
         } else {
             $this->element = $element;
+        }
+
+        if ($validate) {
+            $this->validate();
         }
     }
 
     /**
-     * returns the default xml that specifies this node
+     * returns the default dom node
      *
-     * @return \SimpleXMLElement
+     * @return \DomElement
      */
-    abstract protected function getDefaultElement();
+    abstract protected function buildDefaultDomElement();
 
     /**
-     * Wraps in dom element so it wont wrap <XML tags
-     * around as SimpleXMLElement::toXml does
+     * will return a validate schema for xml
+     *
+     * @return string
+     */
+    abstract protected function getValidateSchema();
+
+    /**
+     * returns C14N is stead of saveXml because
+     * that will prefix with xml attribute
      *
      * @return string
      */
     public function __toString()
     {
-        if (false !== $dom = dom_import_simplexml($this->element)) {
-            return $dom->C14N();
-        } else {
-            throw new \RuntimeException('Could not import SimpleXMLElement');
-        }
+        $doc = new \DOMDocument('1.0', 'UTF-8');
+        $doc->preserveWhiteSpace = false;
+        $doc->formatOutput = true;
+        $doc->appendChild($doc->importNode($this->element, true));
+        return $doc->saveXML();
     }
 
     /**
-     * @return \SimpleXMLElement
+     *
+     * @return  bool
+     * @throws \ErrorException
+     */
+    protected function validate()
+    {
+        set_error_handler(function($type, $message, $file, $line, $stack){
+            trigger_error($message, E_USER_ERROR);
+        }, E_WARNING);
+
+        $doc = new \DOMDocument('1.0', 'UTF-8');
+        $doc->appendChild($doc->importNode($this->element, true));
+        $doc->schemaValidateSource($this->getValidateSchema());
+        restore_error_handler();
+    }
+
+    /**
+     * @return \DomElement
      */
     public function getElement()
     {
         return $this->element;
+    }
+
+    /**
+     * will create string from input type
+     *
+     * @param   $var
+     * @return  string
+     */
+    protected function stringify($var)
+    {
+        switch (strtolower(gettype($var))) {
+            case 'boolean':
+                return ($var) ? 'True' : 'False';
+                break;
+            case 'null':
+                return 'null';
+                break;
+            default:
+                return $var;
+                break;
+        }
     }
 }
