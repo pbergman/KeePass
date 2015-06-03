@@ -15,7 +15,7 @@ class KeePass
      *
      * @param   string  $file
      * @param   string  $password
-     * @return  array|null|resource|string
+     * @return  null|Streams\TempStream
      * @throws  \Exception
      */
     public function loadFile($file, $password)
