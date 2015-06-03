@@ -6,6 +6,7 @@
 namespace PBergman\KeePass;
 
 use PBergman\KeePass\Headers\Header;
+use PBergman\KeePass\Nodes\V2\Node;
 use PBergman\KeePass\Streams;
 
 class KeePass
@@ -15,7 +16,7 @@ class KeePass
      *
      * @param   string  $file
      * @param   string  $password
-     * @return  null|Streams\TempStream
+     * @return  null|Node
      * @throws  \Exception
      */
     public function loadFile($file, $password)
@@ -52,7 +53,7 @@ class KeePass
                     }
                 }
 
-                return $buffer;
+                return new Node($buffer->getContent(), $header);
                 break;
             default:
                 throw new KeePassException(sprintf('Unsupported keepass database version %s', $header[$header::VERSION]));

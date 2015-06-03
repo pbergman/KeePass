@@ -3,8 +3,9 @@
  * @author    Philip Bergman <pbergman@live.nl>
  * @copyright Philip Bergman
  */
+namespace PBergman\KeePass\Nodes\V2\Entities;
 
-namespace PBergman\KeePass\Nodes\V2;
+use PBergman\KeePass\Nodes\V2\AbstractNode;
 
 /**
  * Class String
@@ -19,29 +20,6 @@ namespace PBergman\KeePass\Nodes\V2;
  */
 class String extends AbstractNode
 {
-    const ROOT_ELEMENT_NAME = 'String';
-
-    /**
-     * @param   string      $name
-     * @param   array       $arguments
-     * @return $this|string
-     */
-    public function __call($name, $arguments)
-    {
-        if (preg_match('#^(?P<method>get|set)(?P<name>Key|Value)$#', $name, $ret)) {
-            switch ($ret['method']) {
-                case 'get':
-                    return (string) $this->element->getElementsByTagName($ret['name'])->item(0)->textContent;
-                    break;
-                case 'set':
-                    $this->element->getElementsByTagName($ret['name'])->item(0)->textContent = $arguments[0];
-                    return $this;
-                    break;
-            }
-        } else {
-            throw new \RuntimeException(sprintf('Calling to undefined method: "%s"', $name));
-        }
-    }
 
     /**
      * returns the default dom node
@@ -50,7 +28,7 @@ class String extends AbstractNode
      */
     protected function buildDefaultDomElement()
     {
-        $string = $this->dom->createElement(self::ROOT_ELEMENT_NAME);
+        $string = $this->dom->createElement('String');
         $string->appendChild($this->dom->createElement('Key'));
         $string->appendChild($this->dom->createElement('Value'));
         return $string;
@@ -83,5 +61,16 @@ class String extends AbstractNode
           </xs:element>
         </xs:schema>
         ';
+    }
+
+    /**
+     * should return array of properties of the dom
+     * that can be accessed by the __call method,
+     *
+     * @return array
+     */
+    protected function getProperties()
+    {
+        return ['Key', 'Value'];
     }
 }
