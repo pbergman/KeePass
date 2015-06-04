@@ -9,16 +9,15 @@ use PBergman\KeePass\Nodes\V2\Entities\Entry;
 
 class QueryBuilder
 {
-    const SEARCH_ALL = 1;
+    const SEARCH_ENTRY = 1;
     const SEARCH_HISTORY = 2;
-    const SEARCH_ENTRY = 3;
-    const SEARCH_GROUP = 4;
+    const SEARCH_GROUP = 3;
 
-    const ELEMENT_ALL = '*/';
-    const ELEMENT_STRING_KEY = 'String/Key/';
-    const ELEMENT_STRING_VALUE = 'String/Value/';
+    const ELEMENT_ALL = '/*';
+    const ELEMENT_STRING_KEY = 'String/Key';
+    const ELEMENT_STRING_VALUE = 'String/Value';
 
-    protected $search = self::SEARCH_ALL;
+    protected $search = self::SEARCH_ENTRY;
     protected $where;
     protected $node;
 
@@ -34,7 +33,7 @@ class QueryBuilder
      * @param   int $search
      * @return  $this
      */
-    public function searchIn($search = self::SEARCH_ALL)
+    public function searchIn($search = self::SEARCH_ENTRY)
     {
         $this->search = $search;
         return $this;
@@ -58,11 +57,8 @@ class QueryBuilder
         $query = null;
 
         switch ($this->search) {
-            case self::SEARCH_ALL:
-                $query[] = '//';
-                break;
             case self::SEARCH_ENTRY:
-                $query[] = '//Group/Entry/';
+                $query[] = '/';
                 break;
             case self::SEARCH_GROUP:
                 $query[] = '//Group/Entry/../';
@@ -84,13 +80,21 @@ class QueryBuilder
 
     public function search()
     {
+
+
         $results = $this->node->getXpath()->query($this->getQuery());
+        var_dump($this->getQuery());exit;
         $return = [];
 
         if ($results->length > 0) {
             /** @var \DOMElement $result */
             foreach ($results as $result) {
+
+                var_dump($result->tagName, $result->textContent);exit;
+
                 while ($result->tagName !== 'Entry') {
+
+
                     $result = $this->node->getXpath()->query($this->getQuery() . '/..')->item(0);
                 }
 
