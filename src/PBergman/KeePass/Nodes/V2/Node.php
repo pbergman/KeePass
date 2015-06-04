@@ -6,8 +6,9 @@
 
 namespace PBergman\KeePass\Nodes\V2;
 
+use PBergman\KeePass\Crypt\Salsa20\Salsa20Cipher;
 use PBergman\KeePass\Headers\V2\Header;
-use PBergman\KeePass\Salsa20;
+use PBergman\KeePass\KeePass;
 
 class Node
 {
@@ -25,15 +26,14 @@ class Node
         $this->header = $header;
     }
 
+    /**
+     * Decrypt encrypt elements in tree
+     */
     public function decrypt()
     {
-        $salsa20 = new Salsa20(
-            hash('sha256', $this->header[Header::PROTECTED_STREAM_KEY], true),
-            "\xe8\x30\x09\x4b\x97\x20\x5d\x2a"
-        );
-
+        $key = hash('sha256', $this->header[Header::PROTECTED_STREAM_KEY], true);
+        $salsa20 = new Salsa20Cipher($key, KeePass::STREAM_IV);
         $elements = $this->xpath->query('//String/Value[@Protected="True"]');
-
         /** @var \DOMElement $element */
         foreach ($elements as $element) {
             $element->textContent = $salsa20->decrypt(base64_decode($element->textContent));

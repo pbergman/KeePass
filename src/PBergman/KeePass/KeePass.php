@@ -11,6 +11,8 @@ use PBergman\KeePass\Streams;
 
 class KeePass
 {
+    const STREAM_IV = "\xe8\x30\x09\x4b\x97\x20\x5d\x2a";
+
     /**
      * open a keepass database
      *
