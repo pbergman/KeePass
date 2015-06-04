@@ -24,6 +24,19 @@ class Node
         $this->dom->loadXML($xml);
         $this->xpath = new \DOMXPath($this->dom);
         $this->header = $header;
+        $this->uuidToHex();
+    }
+
+    /**
+     * Set all ids(UUID) back to hex
+     */
+    protected function uuidToHex()
+    {
+        $elements = $this->xpath->query('//UUID');
+        /** @var \DOMElement $element */
+        foreach ($elements as $element) {
+            $element->textContent = strtoupper(bin2hex(base64_decode($element->textContent)));
+        }
     }
 
     /**
@@ -54,14 +67,6 @@ class Node
     public function getXpath()
     {
         return $this->xpath;
-    }
-
-    /**
-     * @param \DOMXPath $xpath
-     */
-    public function setXpath($xpath)
-    {
-        $this->xpath = $xpath;
     }
 
     /**
