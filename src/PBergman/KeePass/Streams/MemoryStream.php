@@ -7,18 +7,18 @@
 namespace PBergman\KeePass\Streams;
 
 /**
- * Class TempStream
+ * Class MemoryStream
  *
  * @package PBergman\KeePass\Streams
  */
-class TempStream extends AbstractStreamWrapper
+class MemoryStream extends AbstractStreamWrapper
 {
     /**
      * @return resource
      */
     protected function getResource($data)
     {
-        if (false === $handler = fopen('php://temp', 'br+')) {
+        if (false === $handler = fopen('php://memory', 'br+')) {
             throw new \RuntimeException('Could not create resource');
         }
         fwrite($handler, $data);

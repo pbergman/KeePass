@@ -3,59 +3,46 @@
  * @author    Philip Bergman <pbergman@live.nl>
  * @copyright Philip Bergman
  */
-namespace PBergman\KeePass;
+
+namespace PBergman\KeePass\Crypt\Salsa20\Core;
+
+use PBergman\KeePass\Crypt\Salsa20\Salsa20CipherException;
+use PBergman\KeePass\Streams\AbstractStreamWrapper;
 
 /**
- * Class Salsa20
+ * Class Salsa20Core16
  *
- * a implementation from the Salsa20 from C# and Perl, got
- * some problems with the php int (32) so using with this
- * implementation a 16 integers.
+ * Implementation of the salsa20 adapted from C# and PERL,
  *
- * @package PBergman\KeePass
+ * uses the php 16-bits instead of 32-bits, its a bit heavy
+ * but should work if you got problems with the 32-bit version.
+ *
+ * @package PBergman\KeePass\Crypt\Salsa20\Core
  */
-class Salsa20
+class Salsa20Core16 extends AbstractSalsa20Core
 {
-    protected $rounds;
-    protected $state;
-    protected $output;
-    protected $pos;
-
     /**
-     * @param string    $key
-     * @param string    $iv
-     * @param int       $rounds
+     * @param string $key
+     * @param string $iv
+     * @param int $rounds
+     * @param AbstractStreamWrapper $stream
+     *
+     * @throws Salsa20CipherException
      */
-    public function __construct($key, $iv, $rounds = 20)
+    public function __construct($key, $iv, $rounds = 20, AbstractStreamWrapper $stream)
     {
-        if (strlen($iv) !== 8) {
-            throw new \RuntimeException('Salsa20 IV length must be 8');
+        $iv = $iv = array_values(unpack('C8', $iv));
+        $this->rounds = $rounds;
+
+        if (strlen($key) === 32) {
+            $key = array_values(unpack('C32', $key));
+            $control = [0x7865, 0x6170, 0x646e, 0x3320, 0x2d32, 0x7962, 0x6574, 0x6b20]; // SIGMA
         } else {
-            $iv = array_values(unpack('C8', $iv));
+            $key = array_values(unpack('C32', $key.$key));
+            $control = [0x7865, 0x6170, 0x646e, 0x3320, 0x2d36, 0x7962, 0x6574, 0x6b20]; // TAU
         }
 
-        if (!in_array($rounds, [8, 12, 20])) {
-            throw new \RuntimeException('Salsa20 rounds must be 8, 12, or 20');
-        } else {
-            $this->rounds = $rounds;
-        }
-
-        switch (true) {
-            case strlen($key) === 32:
-                $key = array_values(unpack('C32', $key));
-                $control = [0x7865, 0x6170, 0x646e, 0x3320, 0x2d32, 0x7962, 0x6574, 0x6b20]; // SIGMA
-                break;
-            case strlen($key) === 16:
-                $key = array_values(unpack('C32', $key.$key));
-                $control = [0x7865, 0x6170, 0x646e, 0x3320, 0x2d36, 0x7962, 0x6574, 0x6b20]; // TAU
-                break;
-            default:
-                throw new \RuntimeException('Salsa20 key length must be 16 or 32');
-                break;
-        }
-
-        $this->output = new \SplFixedArray(64);
-        $this->pos = count($this->output);
+        $this->stream = $stream;
         $this->state = new \SplFixedArray(32);
         $this->state[0]  = $control[0];
         $this->state[1]  = $control[1];
@@ -93,6 +80,9 @@ class Salsa20
     }
 
     /**
+     * Rotates an unsigned 16-bit value to the
+     * left by the specified number of bits.
+     *
      * @param array $x  object with bits
      * @param array $a  array of keys to add
      * @param int   $r  int representing rotate
@@ -119,7 +109,7 @@ class Salsa20
     /**
      * Main core function
      */
-    protected function nextOutput()
+    protected function fillStream()
     {
         $x = $this->state->toArray();
 
@@ -171,8 +161,8 @@ class Salsa20
             $args[] = $v >> 8;
         });
 
-        $this->output = call_user_func_array('pack', $args);
-        $this->pos = 0;
+        $this->stream->rewrite(call_user_func_array('pack', $args));
+
         $this->state[16] += 1;
 
         if ($this->state[16] == 0xffff) {
@@ -191,44 +181,5 @@ class Salsa20
                 }
             }
         }
-    }
-
-    /**
-     * read the X bytes, that are given with $bytes
-     *
-     * @param   int $bytes
-     * @return  null|string
-     */
-    protected function getNextBytes($bytes)
-    {
-        $ret = null;
-        while($bytes) {
-            if ($this->pos == 64) {
-                $this->nextOutput();
-            }
-            $length = min(64 - $this->pos, $bytes);
-            $ret .= substr($this->output, $this->pos, $length);
-            $bytes -= $length;
-            $this->pos += $length;
-        }
-        return $ret ;
-    }
-
-    /**
-     * @param   $s
-     * @return int
-     */
-    public function decrypt($s)
-    {
-        return $s ^ $this->getNextBytes(strlen($s));
-    }
-
-    /**
-     * @param   $s
-     * @return int
-     */
-    public function encrypt($s)
-    {
-        return $s ^ $this->getNextBytes(strlen($s));
     }
 }

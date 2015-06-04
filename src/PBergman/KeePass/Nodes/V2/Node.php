@@ -64,5 +64,21 @@ class Node
         $this->xpath = $xpath;
     }
 
+    /**
+     * @return Header
+     */
+    public function getHeader()
+    {
+        return $this->header;
+    }
+
+    /**
+     * @return \DOMDocument
+     */
+    public function getDom()
+    {
+        return $this->dom;
+    }
+
 
 }
