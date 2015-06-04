@@ -195,4 +195,24 @@ abstract class AbstractNode
             throw new \RuntimeException(sprintf('Calling to undefined method: "%s"', $name));
         }
     }
+
+    /**
+     * @inheritdoc
+     */
+    public function __debugInfo()
+    {
+        return $this->toArray();
+
+    }
+
+    /**
+     * return element as array
+     *
+     * @return mixed
+     */
+    public function toArray()
+    {
+        return json_decode(json_encode((array) simplexml_import_dom($this->element)),1);
+    }
+
 }

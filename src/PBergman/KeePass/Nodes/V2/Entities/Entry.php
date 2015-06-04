@@ -148,5 +148,24 @@ class Entry extends AbstractNode
 
         return $this;
     }
+
+    /**
+     * get all string elements
+     *
+     * @return null|String[]
+     */
+    public function getStrings()
+    {
+        $strings = $this->element->getElementsByTagName('String');
+        $return = null;
+
+        if ($strings->length  > 0) {
+            foreach ($strings as $string) {
+                $return[] = new String($string, $this->dom);
+            }
+        }
+
+        return $strings;
+    }
 }
 

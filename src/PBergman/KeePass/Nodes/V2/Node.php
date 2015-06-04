@@ -9,6 +9,8 @@ namespace PBergman\KeePass\Nodes\V2;
 use PBergman\KeePass\Crypt\Salsa20\Salsa20Cipher;
 use PBergman\KeePass\Headers\V2\Header;
 use PBergman\KeePass\KeePass;
+use PBergman\KeePass\Nodes\V2\Entities\Entry;
+use PBergman\KeePass\Nodes\V2\Entities\Times;
 
 class Node
 {
@@ -54,11 +56,14 @@ class Node
     }
 
     /**
-     * @return QueryBuilder
+     * extend xpath with php functions
      */
-    public function getQueryBuilder()
+    public function extendXpath()
     {
-        return new QueryBuilder($this);
+        // Register the php: namespace (required)
+        $this->xpath->registerNamespace("php", "http://php.net/xpath");
+        // Register PHP functions (no restrictions)
+        $this->xpath->registerPHPFunctions();
     }
 
     /**
@@ -85,5 +90,59 @@ class Node
         return $this->dom;
     }
 
+    /**
+     * @param   string  $search
+     * @param   null    $fieldName
+     * @return  null|array|Entry[]
+     */
+    public function searchEntry($search, $fieldName = null)
+    {
+        $query[] = '//Group/Entry/';
 
+        if (is_null($fieldName)) {
+            $query[] = sprintf('*[text()="%s"]', $search);
+            $query[] = "/..";
+            $query[] = "|";
+            $query[] = '//Group/Entry/*/';
+            $query[] = sprintf('*[text()="%s"]', $search);
+            $query[] = "/../..";
+        } else {
+            switch($fieldName) {
+                case 'CreationTime':
+                case 'LastModificationTime':
+                case 'LastAccessTime':
+                case 'ExpiryTime':
+                case 'UsageCount':
+                case 'LocationChanged':
+                    if ($search instanceof \DateTime) {
+                        $search = $search
+                            ->setTimezone(new \DateTimeZone("Z"))
+                            ->format(Times::DATE_FORMAT);
+                    }
+                    $query[] = 'Times/';
+                    $query[] = sprintf('%s[text()="%s"]', $fieldName, $search);
+                    $query[] = "/../..";
+                    break;
+                case 'Key':
+                case 'Value':
+                    $query[] = 'String/';
+                    $query[] = sprintf('%s[text()="%s"]', $fieldName, $search);
+                    $query[] = "/../..";
+                    break;
+                default:
+                    $query[] = sprintf('%s[text()="%s"]', $fieldName, $search);
+                    $query[] = "/..";
+                    break;
+            }
+        }
+
+        $elements = $this->xpath->query(implode('', $query));
+        $return = null;
+        if ($elements->length > 0) {
+            foreach($elements as $element) {
+                $return[] = new Entry($element, $this->dom);
+            }
+        }
+        return $return;
+    }
 }
