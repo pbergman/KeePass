@@ -10,6 +10,7 @@ use PBergman\KeePass\Crypt\Salsa20\Salsa20Cipher;
 use PBergman\KeePass\Headers\V2\Header;
 use PBergman\KeePass\KeePass;
 use PBergman\KeePass\Nodes\V2\Entities\Entry;
+use PBergman\KeePass\Nodes\V2\Entities\Meta;
 use PBergman\KeePass\Nodes\V2\Entities\Times;
 
 class Node
@@ -20,13 +21,29 @@ class Node
 
     function __construct($xml, Header $header)
     {
-        $this->dom = new \DOMDocument('1.0'. 'UTF-8');
+        $this->dom = new \DOMDocument('1.0' . 'UTF-8');
         $this->dom->preserveWhiteSpace = false;
         $this->dom->formatOutput = true;
         $this->dom->loadXML($xml);
         $this->xpath = new \DOMXPath($this->dom);
         $this->header = $header;
         $this->uuidToHex();
+    }
+
+    public function getMeta()
+    {
+        return new Meta(
+            $this->xpath->query('/KeePassFile/Meta')->item(0),
+            $this->dom
+        );
+    }
+
+    /**
+     * @return \DOMNode
+     */
+    public function getRoot()
+    {
+        return $this->xpath->query('/KeePassFile/Root')->item(0);
     }
 
     /**
@@ -91,8 +108,8 @@ class Node
     }
 
     /**
-     * @param   string  $search
-     * @param   null    $fieldName
+     * @param   string $search
+     * @param   null $fieldName
      * @return  null|array|Entry[]
      */
     public function searchEntry($search, $fieldName = null)
@@ -107,7 +124,7 @@ class Node
             $query[] = sprintf('*[text()="%s"]', $search);
             $query[] = "/../..";
         } else {
-            switch($fieldName) {
+            switch ($fieldName) {
                 case 'CreationTime':
                 case 'LastModificationTime':
                 case 'LastAccessTime':
@@ -136,11 +153,43 @@ class Node
             }
         }
 
-        $elements = $this->xpath->query(implode('', $query));
+        $elements = $this->xpath->query(implode('', $query), $this->getRoot());
         $return = null;
         if ($elements->length > 0) {
-            foreach($elements as $element) {
+            foreach ($elements as $element) {
                 $return[] = new Entry($element, $this->dom);
+            }
+        }
+        return $return;
+    }
+
+    /**
+     * will build a hierarchy list from parent en entry nodes
+     *
+     * @param   \DomNodeList $groups
+     * @return  array
+     */
+    function getList(\DomNodeList $groups = null)
+    {
+        if (is_null($groups)) {
+            $groups = $this->getXpath()->query('/KeePassFile/Root/Group');
+        }
+
+        $return = [];
+        /** @var \DOMElement $group */
+        foreach ($groups as $group) {
+            $id = $this->xpath->query('UUID', $group)->item(0)->textContent;
+            $return[$id]['name'] = $this->xpath->query('Name', $group)->item(0)->textContent;
+            if ($this->xpath->query('Group', $group)->length > 0) {
+                $return[$id]['groups'] = $this->getList($this->xpath->query('Group', $group));
+            }
+            if ($this->xpath->query('Entry', $group)->length > 0) {
+                foreach ($this->xpath->query('Entry', $group) as $entry) {
+                    $name = $this->xpath->query('String/Key[text()="Title"]/../Value', $entry)->item(0)->textContent;
+                    $uid = $this->xpath->query('UUID', $entry)->item(0)->textContent;
+                    $return[$id]['entries'][$uid] = $name;
+
+                }
             }
         }
         return $return;
