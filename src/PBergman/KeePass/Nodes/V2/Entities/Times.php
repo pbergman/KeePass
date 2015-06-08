@@ -37,10 +37,34 @@ class Times extends AbstractNode
      */
     public function __call($name, $arguments)
     {
-        if ($arguments[0] instanceof \DateTime) {
-            $arguments[0] = $arguments[0]
-                ->setTimezone(new \DateTimeZone('Z'))
-                ->format(self::DATE_FORMAT);
+        if (preg_match('#^(?P<method>get|set)(?P<name>\w+(Time|Changed))$#', $name, $ret)) {
+            switch($ret['method']) {
+                case 'get':
+                    switch($name) {
+                        case 'getCreationTime':
+                        case 'getLastModificationTime':
+                        case 'DefaultUserNameChanged':
+                        case 'getLastAccessTime':
+                        case 'getExpiryTime':
+                        case 'getLocationChanged':
+                            $value = $this
+                                ->element
+                                ->getElementsByTagName($ret['name'])
+                                ->item(0)
+                                ->nodeValue;
+                            return new \DateTime($value);
+                            break;
+                    }
+                    break;
+                case 'set':
+                    if ($arguments[0] instanceof \DateTime) {
+                        $arguments[0] = $arguments[0]
+                            ->setTimezone(new \DateTimeZone('Z'))
+                            ->format(Times::DATE_FORMAT);
+                    }
+                    break;
+            }
+
         }
 
         return parent::__call($name, $arguments);

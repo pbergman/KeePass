@@ -15,9 +15,20 @@ use PBergman\KeePass\Nodes\V2\Entities\Times;
 
 class Node
 {
+    /** @var \DOMDocument  */
     protected $dom;
+    /** @var \DOMXPath  */
     protected $xpath;
+    /** @var Header  */
     protected $header;
+
+     const ANSI_UPPER_CASE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞŸŽŠŒ';
+     const ANSI_LOWER_CASE = 'abcdefghijklmnopqrstuvwxyzàáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿžšœ';
+     const MATCH_ALL = 1;
+     const MATCH_LAST_WITH = 2;
+     const MATCH_START_WITH = 4;
+     const MATCH_CONTAINS = 8;
+     const MATCH_CASE_INSENSITIVE = 16;
 
     function __construct($xml, Header $header)
     {
@@ -108,20 +119,49 @@ class Node
     }
 
     /**
-     * @param   string $search
-     * @param   null $fieldName
-     * @return  null|array|Entry[]
+     * @param   string  $search
+     * @param   null    $fieldName
+     * @param   int     $mode
+     * @return array|null|Entities\Entry[]
      */
-    public function searchEntry($search, $fieldName = null)
+    public function searchEntry($search, $fieldName = null, $mode = self::MATCH_ALL)
     {
+        $text = '{TEXT}';
+        $replace = ['{TEXT}' => 'text()'];
+
+        if (self::MATCH_CASE_INSENSITIVE === ($mode & self::MATCH_CASE_INSENSITIVE)) {
+            $text = 'translate({TEXT}, "{UPPERCASE}", "{LOWERCASE}")';
+            $replace['{LOWERCASE}'] = self::ANSI_LOWER_CASE;
+            $replace['{UPPERCASE}'] = self::ANSI_UPPER_CASE;
+            $search = strtolower($search);
+        }
+
+        $text = str_replace(array_keys($replace), array_values($replace), $text);
+
+        if (self::MATCH_ALL === ($mode & self::MATCH_ALL)) {
+            $match = sprintf('%s="%s"', $text, $search);
+        }
+
+        if (self::MATCH_LAST_WITH === ($mode & self::MATCH_LAST_WITH)) {
+            $match = sprintf('"%s" = substring(%s, string-length(text()) - string-length("%s") +1)', $search, $text, $search);
+        }
+
+        if (self::MATCH_START_WITH === ($mode & self::MATCH_START_WITH)) {
+            $match = sprintf('starts-with(%s,"%s")', $text, $search);
+        }
+
+        if (self::MATCH_CONTAINS === ($mode & self::MATCH_CONTAINS)) {
+            $match = sprintf('contains(%s,"%s")', $text, $search);
+        }
+
         $query[] = '//Group/Entry/';
 
         if (is_null($fieldName)) {
-            $query[] = sprintf('*[text()="%s"]', $search);
+            $query[] = sprintf('*[%s]', $match);
             $query[] = "/..";
             $query[] = "|";
             $query[] = '//Group/Entry/*/';
-            $query[] = sprintf('*[text()="%s"]', $search);
+            $query[] = sprintf('*[%s]', $match);
             $query[] = "/../..";
         } else {
             switch ($fieldName) {
@@ -137,23 +177,24 @@ class Node
                             ->format(Times::DATE_FORMAT);
                     }
                     $query[] = 'Times/';
-                    $query[] = sprintf('%s[text()="%s"]', $fieldName, $search);
+                    $query[] = sprintf('%s[%s]', $fieldName, $match);
                     $query[] = "/../..";
                     break;
                 case 'Key':
                 case 'Value':
                     $query[] = 'String/';
-                    $query[] = sprintf('%s[text()="%s"]', $fieldName, $search);
+                    $query[] = sprintf('%s[%s]', $fieldName, $match);
                     $query[] = "/../..";
                     break;
                 default:
-                    $query[] = sprintf('%s[text()="%s"]', $fieldName, $search);
+                    $query[] = sprintf('%s[$s]', $fieldName, $match);
                     $query[] = "/..";
                     break;
             }
         }
 
         $elements = $this->xpath->query(implode('', $query), $this->getRoot());
+
         $return = null;
         if ($elements->length > 0) {
             foreach ($elements as $element) {

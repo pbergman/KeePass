@@ -123,6 +123,12 @@ abstract class AbstractNode
             case 'null':
                 return 'null';
                 break;
+            case 'double':
+                return (double) $var;
+                break;
+            case 'integer':
+                return (int) $var;
+                break;
             default:
                 return $var;
                 break;
@@ -213,6 +219,22 @@ abstract class AbstractNode
     public function toArray()
     {
         return json_decode(json_encode((array) simplexml_import_dom($this->element)),1);
+    }
+
+    /**
+     * @return \DOMDocument
+     */
+    public function getDom()
+    {
+        return $this->dom;
+    }
+
+    /**
+     * @return \DOMDocument
+     */
+    public function isSameDom(\DOMDocument $dom)
+    {
+        return $this->dom === $dom;
     }
 
 }

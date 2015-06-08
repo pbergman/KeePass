@@ -13,9 +13,95 @@ use PBergman\KeePass\Nodes\V2\Traits\TimesTrait;
  *
  * @package PBergman\KeePass\Nodes\V2
  *
+ * @method $this  setGenerator
+ * @method $this  setHeaderHash
+ * @method $this  setDatabaseName
+ * @method $this  setDatabaseNameChanged
+ * @method $this  setDatabaseDescription
+ * @method $this  setDatabaseDescriptionChanged
+ * @method $this  setDefaultUserName
+ * @method $this  setDefaultUserNameChanged
+ * @method $this  setMaintenanceHistoryDays
+ * @method $this  setColor
+ * @method $this  setMasterKeyChanged
+ * @method $this  setMasterKeyChangeRec
+ * @method $this  setMasterKeyChangeForce
+ * @method $this  setRecycleBinEnabled
+ * @method $this  setRecycleBinUUID
+ * @method $this  setRecycleBinChanged
+ * @method $this  setEntryTemplatesGroup
+ * @method $this  setEntryTemplatesGroupChanged
+ * @method $this  setHistoryMaxItems
+ * @method $this  setHistoryMaxSize
+ * @method $this  setLastSelectedGroup
+ * @method $this  setLastTopVisibleGroup
+ * @method $this  setCustomData
+ *
+ * @method string     getGenerator
+ * @method string     getHeaderHash
+ * @method string     getDatabaseName
+ * @method \DateTime  getDatabaseNameChanged
+ * @method string     getDatabaseDescription
+ * @method \DateTime  getDatabaseDescriptionChanged
+ * @method string     getDefaultUserName
+ * @method \DateTime  getDefaultUserNameChanged
+ * @method int        getMaintenanceHistoryDays
+ * @method string     getColor
+ * @method \DateTime  getMasterKeyChanged
+ * @method int        getMasterKeyChangeRec
+ * @method int        getMasterKeyChangeForce
+ * @method bool       getRecycleBinEnabled
+ * @method string     getRecycleBinUUID
+ * @method \DateTime  getRecycleBinChanged
+ * @method string     getEntryTemplatesGroup
+ * @method \DateTime  getEntryTemplatesGroupChanged
+ * @method int        getHistoryMaxItems
+ * @method int        getHistoryMaxSize
+ * @method string     getLastSelectedGroup
+ * @method string     getLastTopVisibleGroup
+ * @method string     getCustomData
  */
 class Meta extends AbstractNode
 {
+
+    /**
+     * @inheritdoc
+     */
+    public function __call($name, $arguments)
+    {
+        if (preg_match('#^(?P<method>get|set)(?P<name>\w+Changed)$#', $name, $ret)) {
+            switch($ret['method']) {
+                case 'get':
+                    switch($name) {
+                        case 'DatabaseNameChanged':
+                        case 'DatabaseDescriptionChanged':
+                        case 'DefaultUserNameChanged':
+                        case 'MasterKeyChanged':
+                        case 'RecycleBinChanged':
+                        case 'EntryTemplatesGroupChanged':
+                            $value = $this
+                                ->element
+                                ->getElementsByTagName($ret['name'])
+                                ->item(0)
+                                ->nodeValue;
+                            return new \DateTime($value);
+                        break;
+                    }
+                    break;
+                case 'set':
+                    if ($arguments[0] instanceof \DateTime) {
+                        $arguments[0] = $arguments[0]
+                            ->setTimezone(new \DateTimeZone('Z'))
+                            ->format(Times::DATE_FORMAT);
+                    }
+                    break;
+            }
+
+        }
+
+        return parent::__call($name, $arguments);
+    }
+
     /**
      * will return a validate schema for xml
      *
@@ -169,12 +255,47 @@ class Meta extends AbstractNode
      */
     public function setBinaries(Binaries $binaries)
     {
+        if ($this->isSameDom($binaries->getDom())) {
+            $node = $binaries->getElement();
+        } else {
+            $node = $this->dom->importNode($binaries->getElement(), true);
+        }
+
         $this->element->replaceChild(
-            $binaries,
+            $node,
             $this->element->getElementsByTagName('Binaries')->item(0)
         );
 
         return $this;
+    }
+
+    /**
+     * @return MemoryProtection
+     */
+    public function getMemoryProtection()
+    {
+        return new MemoryProtection(
+            $this->element->getElementsByTagName('MemoryProtection')->item(0),
+            $this->dom
+        );
+    }
+
+    /**
+     * @param MemoryProtection $memory
+     */
+    public function setMemoryProtection(MemoryProtection $memory)
+    {
+        if ($this->isSameDom($memory->getDom())) {
+            $node = $memory->getElement();
+        } else {
+            $node = $this->dom->importNode($memory->getElement(), true);
+        }
+
+        $this->element->replaceChild(
+            $node,
+            $this->element->getElementsByTagName('MemoryProtection')->item(0)
+        );
+
     }
 
     /**
