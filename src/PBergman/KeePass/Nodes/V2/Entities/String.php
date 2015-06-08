@@ -43,7 +43,7 @@ class String extends AbstractNode
     {
         return '
         <xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
-          <xs:element name="Strings">
+          <xs:element name="String">
             <xs:complexType>
               <xs:sequence>
                 <xs:element type="xs:string" name="Key"/>
