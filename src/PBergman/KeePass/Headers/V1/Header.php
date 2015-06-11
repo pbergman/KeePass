@@ -5,8 +5,8 @@
  */
 namespace PBergman\KeePass\Headers\V1;
 
+use PBergman\KeePass\StreamWrapper;
 use PBergman\KeePass\Headers\AbstractHeader;
-use PBergman\KeePass\Streams\AbstractStreamWrapper;
 
 class Header extends AbstractHeader
 {
@@ -40,11 +40,11 @@ class Header extends AbstractHeader
     }
 
     /**
-     * @param   AbstractStreamWrapper $buffer
+     * @param   StreamWrapper $buffer
      * @throws  HeaderException
      * @return  $this
      */
-    public function read(AbstractStreamWrapper $buffer)
+    public function read(StreamWrapper $buffer)
     {
 
         if (count($buffer) <  $this[self::HEADER_SIZE]) {

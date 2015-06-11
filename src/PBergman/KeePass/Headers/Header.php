@@ -8,7 +8,7 @@ namespace PBergman\KeePass\Headers;
 
 use PBergman\KeePass\Headers\V1\Header as HeaderV1;
 use PBergman\KeePass\Headers\V2\Header as HeaderV2;
-use PBergman\KeePass\Streams\AbstractStreamWrapper;
+use PBergman\KeePass\StreamWrapper;
 
 /**
  * Class Header
@@ -20,11 +20,11 @@ class Header
     /**
      * Parse header of database
      *
-     * @param   AbstractStreamWrapper $buffer
+     * @param   StreamWrapper $buffer
      * @throws  HeaderException
      * @return  null|HeaderV2|HeaderV1
      */
-    static function parseStream(AbstractStreamWrapper $buffer)
+    static function parseStream(StreamWrapper $buffer)
     {
         $sig = unpack('L2',  $buffer->read(8));
         $header = null;

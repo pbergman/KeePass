@@ -5,10 +5,8 @@
  */
 namespace PBergman\KeePass\Headers\V2;
 
-use PBergman\KeePass\Database\StreamWrapper;
+use PBergman\KeePass\StreamWrapper;
 use PBergman\KeePass\Headers\AbstractHeader;
-use PBergman\KeePass\KeePass;
-use PBergman\KeePass\Streams\AbstractStreamWrapper;
 
 class Header extends AbstractHeader
 {
@@ -41,11 +39,11 @@ class Header extends AbstractHeader
     }
 
     /**
-     * @param   AbstractStreamWrapper   $buffer
+     * @param   StreamWrapper   $buffer
      * @return  $this
      * @throws  HeaderException
      */
-    public function read(AbstractStreamWrapper $buffer)
+    public function read(StreamWrapper $buffer)
     {
         $ret = unpack('Lver', $buffer->read(4));
         $this[self::VER] = $ret['ver'];
