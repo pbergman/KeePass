@@ -21,6 +21,10 @@ class Node
     protected $xpath;
     /** @var Header  */
     protected $header;
+    /** @var Salsa20Cipher  */
+    protected $salsa;
+    /** @var bool  */
+    protected $is_unlocked = false;
 
      const ANSI_UPPER_CASE = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÀÁÂÃÄÅÆÇÈÉÊËÌÍÎÏÐÑÒÓÔÕÖØÙÚÛÜÝÞŸŽŠŒ';
      const ANSI_LOWER_CASE = 'abcdefghijklmnopqrstuvwxyzàáâãäåæçèéêëìíîïðñòóôõöøùúûüýþÿžšœ';
@@ -30,7 +34,7 @@ class Node
      const MATCH_CONTAINS = 8;
      const MATCH_CASE_INSENSITIVE = 16;
 
-    function __construct($xml, Header $header)
+    function __construct($xml, Header $header, Salsa20Cipher $salsa = null)
     {
         $this->dom = new \DOMDocument('1.0' . 'UTF-8');
         $this->dom->preserveWhiteSpace = false;
@@ -38,7 +42,11 @@ class Node
         $this->dom->loadXML($xml);
         $this->xpath = new \DOMXPath($this->dom);
         $this->header = $header;
-        $this->uuidToHex();
+//        $this->uuidToHex();
+        $this->salsa = ($salsa) ? $salsa : new Salsa20Cipher(
+            hash('sha256', $this->header[Header::PROTECTED_STREAM_KEY], true),
+            KeePass::STREAM_IV
+        );
     }
 
     public function getMeta()
@@ -72,14 +80,38 @@ class Node
     /**
      * Decrypt encrypt elements in tree
      */
-    public function decrypt()
+    public function unlock()
     {
-        $key = hash('sha256', $this->header[Header::PROTECTED_STREAM_KEY], true);
-        $salsa20 = new Salsa20Cipher($key, KeePass::STREAM_IV);
+//        $this->salsa = new Salsa20Cipher(
+//            hash('sha256', $this->header[Header::PROTECTED_STREAM_KEY], true),
+//            KeePass::STREAM_IV
+//        );
+
         $elements = $this->xpath->query('//String/Value[@Protected="True"]');
         /** @var \DOMElement $element */
         foreach ($elements as $element) {
-            $element->textContent = $salsa20->decrypt(base64_decode($element->textContent));
+            if (!empty($element->textContent)) {
+                $element->textContent = $this->salsa->decrypt(base64_decode($element->textContent));
+            }
+        }
+        $this->is_unlocked = true;
+    }
+
+    public function lock()
+    {
+//        $this->salsa = new Salsa20Cipher(
+//            hash('sha256', $this->header[Header::PROTECTED_STREAM_KEY], true),
+//            KeePass::STREAM_IV
+//        );
+
+        if ($this->is_unlocked) {
+            $elements = $this->xpath->query('//String/Value[@Protected="True"]');
+            /** @var \DOMElement $element */
+            foreach ($elements as $element) {
+                if (!empty($element->textContent)) {
+                    $element->textContent = base64_encode($this->salsa->encrypt($element->textContent));
+                }
+            }
         }
     }
 
