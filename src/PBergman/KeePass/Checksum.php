@@ -16,14 +16,14 @@ class Checksum
     /**
      * will validate stream content and update buffer with new content
      *
-     * @param   Streams\AbstractStreamWrapper $buffer
+     * @param   StreamWrapper $buffer
      * @return  void
      * @throws \Exception
      */
-    public static function unpack(Streams\AbstractStreamWrapper $buffer)
+    public static function unpack(StreamWrapper $buffer)
     {
         $ret = '';
-        for ($pos = 0; $pos < $buffer->left();) {
+        for ($pos = 0; $pos < $buffer->bytesLeft();) {
             $bin = unpack('Lindex/a32hash/isize', $buffer->read(40));
             $pos += 40;
             if ($bin['size'] === 0) {
@@ -45,6 +45,7 @@ class Checksum
             $ret .= $chunk;
         }
 
-        $buffer->rewrite($ret);
+        return $ret;
+//        $buffer->rewrite($ret);
     }
 }
