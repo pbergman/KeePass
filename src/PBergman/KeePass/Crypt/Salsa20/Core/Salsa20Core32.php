@@ -122,7 +122,7 @@ class Salsa20Core32 extends AbstractSalsa20Core
             $args[] = ($x[$i] + $this->state[$i]) & 0xffffffff;
         }
 
-        $this->stream->rewrite(call_user_func_array('pack', $args));
+        $this->stream->write(call_user_func_array('pack', $args));
 
         $this->state[8] = ($this->state[8] + 1) & 0xffffffff;
 
@@ -130,25 +130,5 @@ class Salsa20Core32 extends AbstractSalsa20Core
             $this->state[9] = ($this->state[9] + 1) & 0xffffffff;
         }
 
-    }
-
-    /**
-     * read the X bytes from cypher, that are given with $size
-     *
-     * @param   int $size
-     * @return  null|string
-     */
-    public function getNextBytes($size)
-    {
-        $bytes = null;
-        while($size) {
-            if (0 === ($this->stream->getPos() % 64)) {
-                $this->fillStream();
-            }
-            $length = min(64 - $this->stream->getPos(), $size);
-            $bytes .= $this->stream->read($length);
-            $size -= $length;
-        }
-        return $bytes;
     }
 }

@@ -49,14 +49,32 @@ abstract class AbstractSalsa20Core
     public function getNextBytes($size)
     {
         $bytes = null;
-        while($size) {
-            if (0 === ($this->stream->getPos() % 64)) {
-                $this->fillStream();
-            }
-            $length = min(64 - $this->stream->getPos(), $size);
+        $loops = $this->getLoops($size);
+        foreach ($loops as $length) {
+            $this->fillStream();
             $bytes .= $this->stream->read($length);
-            $size -= $length;
         }
+        $this->stream->seek(0, SEEK_END);
         return $bytes;
+    }
+
+    /**
+     * will return array stack with sizes, the last one
+     * has the remanding of the division. So is size = 130
+     * it would return:
+     *
+     * array(
+     *    [0] => (int) 64
+     *    [1] => (int) 64
+     *    [2] => (int) 2
+     * )
+     *
+     * @param   int   $size
+     * @param   int   $loopSize
+     * @return  array
+     */
+    protected function getLoops($size, $loopSize = 64)
+    {
+        return array_map(function($c) { return array_sum($c); }, array_chunk(array_fill(0, $size, 1), $loopSize));
     }
 }
