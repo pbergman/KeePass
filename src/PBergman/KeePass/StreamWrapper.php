@@ -43,14 +43,24 @@ class StreamWrapper implements \Countable, \ArrayAccess
 
     public function registerCallbackFilter(callable $callback, $mode = STREAM_FILTER_ALL)
     {
-        $filterName = 'callable.' . spl_object_hash($callback);
-        stream_filter_register($filterName, 'PBergman\KeePass\StreamCallbackFilter');
-        $this->appendFilter($filterName, $mode, $callback);
+        $filterName = 'callable.' . spl_object_hash($calwlback);
+        stream_filter_register($filterName, '\PBergman\KeePass\StreamCallbackFilter');
+        return $this->appendFilter($filterName, $mode, $callback);
     }
 
     public function appendFilter($name, $mode = STREAM_FILTER_ALL, $params)
     {
         return stream_filter_append($this->handler, $name, $mode, $params);
+    }
+
+    public function prependFilter($name, $mode = STREAM_FILTER_ALL, $params)
+    {
+        return stream_filter_append($this->handler, $name, $mode, $params);
+    }
+
+    public function removeFilter($filter)
+    {
+        return stream_filter_remove($filter);
     }
 
     /**
