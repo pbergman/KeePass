@@ -5,7 +5,7 @@
  */
 namespace PBergman\KeePass\Headers\V1;
 
-use PBergman\KeePass\StreamWrapper;
+use PBergman\KeePass\Stream\StreamWrapper;
 use PBergman\KeePass\Headers\AbstractHeader;
 
 class Header extends AbstractHeader

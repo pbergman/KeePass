@@ -8,7 +8,7 @@ namespace PBergman\KeePass\Headers;
 
 use PBergman\KeePass\Headers\V1\Header as HeaderV1;
 use PBergman\KeePass\Headers\V2\Header as HeaderV2;
-use PBergman\KeePass\StreamWrapper;
+use PBergman\KeePass\Stream\StreamWrapper;
 
 /**
  * Class Header

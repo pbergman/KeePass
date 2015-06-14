@@ -7,7 +7,7 @@ namespace PBergman\KeePass;
 
 use PBergman\KeePass\Headers\Header;
 use PBergman\KeePass\Nodes\V2\Node;
-use PBergman\KeePass\Streams;
+use PBergman\KeePass\Stream\StreamWrapper;
 
 class KeePass
 {
@@ -34,7 +34,7 @@ class KeePass
             case 2:
                 $key = (string) Key::generate($password, $header);
 
-                $filter = $buffer->appendFilter(sprintf('mdecrypt.%s', MCRYPT_RIJNDAEL_128), STREAM_FILTER_ALL, [
+                $filter = $buffer->appendFilter(sprintf('mdecrypt.%s', MCRYPT_RIJNDAEL_128), STREAM_FILTER_READ, [
                     'iv'    => $header[$header::ENC_IV],
                     'key'   => $key,
                     'mode'  => MCRYPT_MODE_CBC
@@ -65,13 +65,22 @@ class KeePass
                     throw new KeePassException('The database key appears invalid or else the database is corrupt.');
                 }
 
-                $ret = Checksum::unpack($buffer, $filter);
+//                $buffer->removeFilter($filter);
 
-                stream_filter_remove($filter);
+//                $ret = Checksum::unpack($buffer, $filter);
+
+
+                $buffer->registerFilter('checksum.*',  'PBergman\KeePass\Stream\Filters\ChecksumFilter');
+                $buffer->appendFilter('checksum.unpack', STREAM_FILTER_READ);
+
+//                $filter = $buffer->appendFilter('checksum.unpack', STREAM_FILTER_READ);
+
+                var_dump($buffer->getContent());exit;
+
 
                 if ((int) $header[$header::COMPRESSION] === 1) {
 
-                    if (false === $ret = gzdecode($ret)) {
+                    if (false === $ret = gzdecode($buffer->getContent())) {
                         throw new KeePassException('Could not decompress data');
                     }
 //                    else {

@@ -5,7 +5,7 @@
  */
 namespace PBergman\KeePass\Headers;
 
-use PBergman\KeePass\StreamWrapper;
+use PBergman\KeePass\Stream\StreamWrapper;
 
 interface HeaderInterface
 {

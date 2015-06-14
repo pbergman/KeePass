@@ -5,7 +5,7 @@
  */
 namespace PBergman\Fork\Tests;
 
-use PBergman\KeePass\StreamWrapper;
+use PBergman\KeePass\Stream\StreamWrapper;
 
 class StreamTest extends \PHPUnit_Framework_TestCase
 {
@@ -17,7 +17,7 @@ class StreamTest extends \PHPUnit_Framework_TestCase
     public function testInstance()
     {
         $stream = $this->getStream();
-        $this->assertInstanceOf('PBergman\KeePass\StreamWrapper', $stream);
+        $this->assertInstanceOf('PBergman\KeePass\Stream\StreamWrapper', $stream);
         $this->assertSame('resource', gettype($stream->getHandler()));
     }
 
