@@ -28,7 +28,7 @@ class Salsa20CipherException extends \Exception
      */
     static function invalidKeySize()
     {
-        throw new self('Salsa20 key length must be 16 or 32');
+        throw new self('Salsa20 key length must be 16 or 32 given');
     }
 
     /**

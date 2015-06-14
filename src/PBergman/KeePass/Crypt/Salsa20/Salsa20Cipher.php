@@ -21,9 +21,16 @@ class Salsa20Cipher
 {
     const CORE_16 = 1;
     const CORE_32 = 2;
-
     /** @var Core\AbstractSalsa20Core */
     protected $core;
+    /** @var  int */
+    protected $iv;
+    /** @var  int */
+    protected $key;
+    /** @var  int */
+    protected $rounds;
+    /** @var StreamWrapper  */
+    protected $stream;
 
     function __construct($key, $iv, $rounds = 20, $core = self::CORE_32)
     {
@@ -39,19 +46,42 @@ class Salsa20Cipher
             throw Salsa20CipherException::invalidKeySize();
         }
 
-        $stream = new StreamWrapper(fopen('php://memory', 'r+b'));
+        $this->stream = new StreamWrapper(fopen('php://memory', 'r+b'));
+        $this->rounds = $rounds;
+        $this->key = $key;
+        $this->iv = $iv;
 
         switch ($core) {
             case self::CORE_32:
-                $this->core = new Core\Salsa20Core32($key, $iv, $rounds, $stream);
+                $this->core = new Core\Salsa20Core32(
+                    $this->key,
+                    $this->iv,
+                    $this->rounds,
+                    $this->stream
+                );
                 break;
             case self::CORE_16:
-                $this->core = new Core\Salsa20Core16($key, $iv, $rounds, $stream);
+                $this->core = new Core\Salsa20Core16(
+                    $this->key,
+                    $this->iv,
+                    $this->rounds,
+                    $this->stream
+                );
                 break;
             default:
                 throw Salsa20CipherException::invalidCoreType();
                 break;
         }
+    }
+
+    public function resetCore()
+    {
+        $this->core = new $this->core(
+            $this->key,
+            $this->iv,
+            $this->rounds,
+            $this->stream
+        );
     }
 
     /**

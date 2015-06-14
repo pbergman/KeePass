@@ -122,7 +122,7 @@ class Salsa20Core32 extends AbstractSalsa20Core
             $args[] = ($x[$i] + $this->state[$i]) & 0xffffffff;
         }
 
-        $this->stream->write(call_user_func_array('pack', $args));
+        $this->stream->rewrite(call_user_func_array('pack', $args));
 
         $this->state[8] = ($this->state[8] + 1) & 0xffffffff;
 
