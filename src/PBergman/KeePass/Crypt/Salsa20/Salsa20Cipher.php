@@ -7,7 +7,7 @@
 namespace PBergman\KeePass\Crypt\Salsa20;
 
 use PBergman\KeePass\Crypt\Salsa20\Core;
-use PBergman\KeePass\Streams\MemoryStream;
+use PBergman\KeePass\Stream\StreamWrapper;
 
 /**
  * Class Salsa20Cipher
@@ -39,7 +39,7 @@ class Salsa20Cipher
             throw Salsa20CipherException::invalidKeySize();
         }
 
-        $stream = new MemoryStream(null);
+        $stream = new StreamWrapper(fopen('php://memory', 'r+b'));
 
         switch ($core) {
             case self::CORE_32:

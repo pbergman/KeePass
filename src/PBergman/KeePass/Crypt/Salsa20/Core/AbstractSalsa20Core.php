@@ -7,7 +7,7 @@
 namespace PBergman\KeePass\Crypt\Salsa20\Core;
 
 use PBergman\KeePass\Crypt\Salsa20\Salsa20CipherException;
-use PBergman\KeePass\Streams\AbstractStreamWrapper;
+use PBergman\KeePass\Stream\StreamWrapper;
 
 /**
  * Class Salsa20
@@ -22,18 +22,18 @@ abstract class AbstractSalsa20Core
     protected $rounds;
     /** @var \SplFixedArray  */
     protected $state;
-    /** @var AbstractStreamWrapper  */
+    /** @var StreamWrapper  */
     protected $stream;
 
     /**
      * @param   string $key
      * @param   string $iv
      * @param   int $rounds
-     * @param   AbstractStreamWrapper $stream
+     * @param   StreamWrapper $stream
      *
      * @throws  Salsa20CipherException
      */
-    abstract public function __construct($key, $iv, $rounds = 20, AbstractStreamWrapper $stream);
+    abstract public function __construct($key, $iv, $rounds = 20, StreamWrapper $stream);
 
     /**
      * Main core function
