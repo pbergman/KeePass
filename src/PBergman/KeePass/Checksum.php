@@ -5,6 +5,8 @@
 */
 namespace PBergman\KeePass;
 
+use PBergman\KeePass\Stream\StreamWrapper;
+
 /**
  * Class Checksum
  *
@@ -22,7 +24,8 @@ class Checksum
      */
     public static function unpack(StreamWrapper $buffer)
     {
-        $ret = '';
+        $newBuffer = fopen('php://memroy', 'r+b');
+
         for ($pos = 0; $pos < $buffer->bytesLeft();) {
             $bin = unpack('Lindex/a32hash/isize', $buffer->read(40));
             $pos += 40;
