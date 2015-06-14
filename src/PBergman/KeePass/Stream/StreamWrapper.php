@@ -21,7 +21,6 @@ class StreamWrapper implements \Countable, \ArrayAccess
         }
 
         $this->handler = $resource;
-
     }
 
     /**
@@ -379,43 +378,38 @@ class StreamWrapper implements \Countable, \ArrayAccess
     }
 
     /**
-     * @param  resource $handler
-     * @throws StreamException
-     * @return $this;
+     * @param   resource $handler
+     * @param   bool     $copyData
+     * @return  $this
+     * @throws  StreamException
      */
-    public function setHandler($handler)
+    public function setHandler($handler, $copyData = true)
     {
         if (!is_resource($handler)) {
             throw StreamException::argumentNotResource($handler);
         }
 
-        $this->handler = $handler;
-        return $this;
-    }
-
-    /**
-     * @param  resource $handler
-     * @throws StreamException
-     * @return $this;
-     */
-    public function switchHandler($handler, $copyAll = false)
-    {
-        $pos = 0;
-        if (!is_resource($handler)) {
-            throw StreamException::argumentNotResource($handler);
-        }
-        if ($copyAll) {
+        if ($copyData) {
             $pos = $this->getPos();
             $this->rewind();
-        }
-        while (!$this->eof()) {
-            fwrite($handler, $this->read(8192));
-        }
-        if ($copyAll) {
+            while ($this->bytesLeft() < 0) {
+                    fwrite($handler, $this->read(1), 1);
+                    fflush($handler);
+            }
             fseek($handler, $pos);
         }
         $this->close();
         $this->handler = $handler;
         return $this;
     }
+
+    /**
+     * Get a tmp stream
+     */
+    public function getTempStream()
+    {
+        return new TempStream($this);
+    }
+
+
 }

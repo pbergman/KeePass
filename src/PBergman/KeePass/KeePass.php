@@ -65,17 +65,24 @@ class KeePass
                     throw new KeePassException('The database key appears invalid or else the database is corrupt.');
                 }
 
+                var_dump($buffer->getPos(), $buffer->bytesLeft(), $buffer->getInfo()['size']);
+
+                $buffer->setHandler(fopen('php://memory', 'r+b'));
+
+                var_dump($buffer->getPos(), $buffer->bytesLeft(), $buffer->getInfo()['size']);exit;
 //                $buffer->removeFilter($filter);
 
 //                $ret = Checksum::unpack($buffer, $filter);
 
+                $ret = Checksum::unpack($buffer);
 
-                $buffer->registerFilter('checksum.*',  'PBergman\KeePass\Stream\Filters\ChecksumFilter');
-                $buffer->appendFilter('checksum.unpack', STREAM_FILTER_READ);
+//                $buffer->removeFilter($filter);
+//                $buffer->registerFilter('checksum.*',  'PBergman\KeePass\Stream\Filters\ChecksumFilter');
+//                $buffer->appendFilter('checksum.unpack', STREAM_FILTER_READ);
 
 //                $filter = $buffer->appendFilter('checksum.unpack', STREAM_FILTER_READ);
 
-                var_dump($buffer->getContent());exit;
+                var_dump(gzdecode($buffer->getContent()));exit;
 
 
                 if ((int) $header[$header::COMPRESSION] === 1) {

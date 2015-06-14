@@ -24,18 +24,21 @@ class Checksum
      */
     public static function unpack(StreamWrapper $buffer)
     {
-        $newBuffer = fopen('php://memroy', 'r+b');
+        $tmp = $buffer->getTempStream();
 
-        for ($pos = 0; $pos < $buffer->bytesLeft();) {
+        while (!$buffer->eof()) {
+    //        for ($pos = 0; $pos < $buffer->bytesLeft();) {
             $bin = unpack('Lindex/a32hash/isize', $buffer->read(40));
-            $pos += 40;
+    //            $pos += 40;
             if ($bin['size'] === 0) {
                 if ($bin['hash'] !== str_repeat(chr(0), 32)) {
                     throw new KeePassException(sprintf('Found mismatch for 0 chunksize, 0x32 != %s', dechex($bin['hash'])));
                 }
                 break;
             }
+
             $chunk = $buffer->read($bin['size']);
+
             if ($bin['hash'] !== hash('sha256', $chunk, true)) {
                 throw new KeePassException(sprintf(
                     'Chunk hash of index %s did not match, %s != %s',
@@ -44,11 +47,15 @@ class Checksum
                     bin2hex(hash('sha256', $chunk, true))
                 ));
             }
-            $pos += $bin['size'];
-            $ret .= $chunk;
+    //            $pos += $bin['size'];
+            $tmp->write($chunk);
+    //            $ret .= $chunk;
+    //        }
         }
 
-        return $ret;
+//        return $tmp->getContent(-1, 0);
+
+       $tmp->save();
 //        $buffer->rewrite($ret);
     }
 }

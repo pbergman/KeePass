@@ -74,7 +74,7 @@ class Salsa20Cipher
         }
     }
 
-    public function resetCore()
+    public function reset()
     {
         $this->core = new $this->core(
             $this->key,
