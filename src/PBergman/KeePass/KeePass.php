@@ -1,105 +1,262 @@
 <?php
 /**
-* @author    Philip Bergman <pbergman@live.nl>
-* @copyright Philip Bergman
-*/
+ * @author    Philip Bergman <pbergman@live.nl>
+ * @copyright Philip Bergman
+ */
 namespace PBergman\KeePass;
 
-use PBergman\KeePass\Headers\Header;
-use PBergman\KeePass\Nodes\V2\Node;
-use PBergman\KeePass\Stream\StreamWrapper;
+use PBergman\KeePass\Crypt\Salsa20\Salsa20Interface;
+use PBergman\KeePass\Crypt\Salsa20\Salsa20;
+use PBergman\KeePass\Exception;
+use PBergman\KeePass\Exception\ChunkException;
+use PBergman\KeePass\Header\V2\Header;
+use PBergman\KeePass\Key\KeyInterface;
+use PBergman\KeePass\Model\XmlIndex;
+use PBergman\KeePass\Node\Group;
+use PBergman\KeePass\Node\Meta;
+use PBergman\KeePass\Parser\Element\BinariesElementParser;
+use PBergman\KeePass\Parser\Element\CustomIconsElementParser;
+use PBergman\KeePass\Parser\Element\EntryElementParser;
+use PBergman\KeePass\Parser\Element\GroupElementParser;
+use PBergman\KeePass\Parser\Element\IndexParser;
+use PBergman\KeePass\Parser\Element\MemoryProtectionElementParser;
+use PBergman\KeePass\Parser\Element\MetaElementParser;
+use PBergman\KeePass\Parser\Element\StringElementParser;
+use PBergman\KeePass\Parser\Element\TimesElementParser;
+use PBergman\KeePass\Parser\XmlElementParserInterface;
+use PBergman\KeePass\Parser\XmlParser;
+use PBergman\KeePass\Parser\XmlParserState;
+use PBergman\KeePass\Parser\XmlPath;
+use PBergman\KeePass\Stream\StreamInterface;
+use PBergman\KeePass\Stream\TempStream;
 
+/**
+ * Class KeePass
+ *
+ * @package PBergman\KeePass
+ */
 class KeePass
 {
+    // file signature, should be first bytes of file
+    const FILE_SIG_1 = 0x9aa2d903;
+    const FILE_SIG_2 = [
+        // db v1 signature
+        1 => 0xb54bfb65,
+        // db v2 signature
+        2 => 0xb54bfb67,
+    ];
     const STREAM_IV = "\xe8\x30\x09\x4b\x97\x20\x5d\x2a";
+    /** @var Header  */
+    protected $header;
+    /** @var KeyInterface  */
+    protected $key;
+    /** @var StreamInterface */
+    protected $tree;
+    /** @var Salsa20Interface $salsa */
+    protected $salsa;
+
+    /***
+     * KeePass constructor.
+     *
+     * @param StreamInterface $file
+     * @param KeyInterface $key
+     */
+    public function __construct(StreamInterface $file, KeyInterface $key, Salsa20Interface $salsa = null)
+    {
+        $this->key = $key;
+        $this->header = $this->getHeader($file);
+        $this->tree = $this->parseFile($file);
+        if (is_null($salsa)) {
+            $salsa = new Salsa20(
+                hash('sha256', $this->header->getProtectedStreamKey(), true),
+                self::STREAM_IV
+            );
+        }
+        $this->salsa = $salsa;
+    }
 
     /**
-     * open a keepass database
-     *
-     * @param   string  $file
-     * @param   string  $password
-     * @return  null|Node
-     * @throws  \Exception
+     * @param StreamInterface $file
+     * @return null|Header
+     * @throws Exception\KeepassException
+     * @throws Exception\SignatureException
      */
-    public function loadFile($file, $password)
+    protected function getHeader(StreamInterface $file)
     {
-        $buffer = new StreamWrapper(fopen($file, 'rb'));
-        $header = Header::parseStream($buffer);
-
-        switch ($header[$header::VERSION]) {
-            case 1:
-                // not supported now
-                return null;
-                break;
-            case 2:
-                $key = (string) Key::generate($password, $header);
-
-                $filter = $buffer->appendFilter(sprintf('mdecrypt.%s', MCRYPT_RIJNDAEL_128), STREAM_FILTER_READ, [
-                    'iv'    => $header[$header::ENC_IV],
-                    'key'   => $key,
-                    'mode'  => MCRYPT_MODE_CBC
-                ]);
-//
-////                $content = $buffer->getContent();
-////                $buffer = new StreamWrapper(fopen('php://temp', 'w+b'));
-//
-//                $buffer->write(
-//                    mcrypt_decrypt(
-//                        MCRYPT_RIJNDAEL_128,
-//                        $key,
-//                        $content,
-//                        MCRYPT_MODE_CBC,
-//                        $header[$header::ENC_IV]
-//                    )
-//                );
-//
-//                $buffer->rewind();
-//
-//                $content = $buffer->getContent();
-//
-//                $r = substr($content, 0, 32);
-//
-//                var_dump(bin2hex($r), bin2hex($header[$header::START_BYTES]));exit;
-
-                if ($buffer->read(32) !== $header[$header::START_BYTES]) {
-                    throw new KeePassException('The database key appears invalid or else the database is corrupt.');
-                }
-
-                var_dump($buffer->getPos(), $buffer->bytesLeft(), $buffer->getInfo()['size']);
-
-                $buffer->setHandler(fopen('php://memory', 'r+b'));
-
-                var_dump($buffer->getPos(), $buffer->bytesLeft(), $buffer->getInfo()['size']);exit;
-//                $buffer->removeFilter($filter);
-
-//                $ret = Checksum::unpack($buffer, $filter);
-
-                $ret = Checksum::unpack($buffer);
-
-//                $buffer->removeFilter($filter);
-//                $buffer->registerFilter('checksum.*',  'PBergman\KeePass\Stream\Filters\ChecksumFilter');
-//                $buffer->appendFilter('checksum.unpack', STREAM_FILTER_READ);
-
-//                $filter = $buffer->appendFilter('checksum.unpack', STREAM_FILTER_READ);
-
-                var_dump(gzdecode($buffer->getContent()));exit;
-
-
-                if ((int) $header[$header::COMPRESSION] === 1) {
-
-                    if (false === $ret = gzdecode($buffer->getContent())) {
-                        throw new KeePassException('Could not decompress data');
-                    }
-//                    else {
-//                        $buffer->rewrite($data);
-//                    }
-                }
-
-                return new Node($ret, $header);
-                break;
-            default:
-                throw new KeePassException(sprintf('Unsupported keepass database version %s', $header[$header::VERSION]));
-
+        $sig = unpack('L2',  $file->read(8));
+        $header = null;
+        if ($sig[1] !== $this::FILE_SIG_1) {
+            throw new Exception\SignatureException('sig1', $sig[1], $this::FILE_SIG_1);
         }
+        switch ($sig[2]) {
+            case $this::FILE_SIG_2[1]:
+                throw new Exception\KeepassException("keepass v1 db is not currently supported");
+                break;
+            case $this::FILE_SIG_2[2]:
+                $header = new Header($file);
+                break;
+        }
+
+        return $header;
+    }
+
+    /**
+     * @param StreamInterface $file
+     * @return StreamInterface
+     * @throws ChunkException
+     * @throws KeePassException
+     */
+    protected function parseFile(StreamInterface $file)
+    {
+        $this->key->generate($this->header);
+
+        $content = openssl_decrypt(
+            $file->readAll(),
+            'AES-256-CBC',
+            $this->key->getMasterKey(),
+            OPENSSL_RAW_DATA|OPENSSL_ZERO_PADDING,
+            $this->header->getEncryptionIv()
+        );
+
+        if (substr($content, 0, 32) !== $this->header->getStartBytes()) {
+            throw new \RuntimeException("corrupted or invalid database");
+        }
+
+        $buf = '';
+        $pos = 32;
+
+        while ($pos < strlen($content)) {
+            $bin = unpack('Lindex/a32hash/lsize', substr($content, $pos, 40));
+            $pos += 40;
+
+            if ($bin['size'] === 0) {
+                if ($bin['hash'] !== str_repeat(chr(0), 32)) {
+                    throw new ChunkException(sprintf('Found mismatch for 0 chunksize, 0x32 != %s', dechex($bin['hash'])));
+                }
+                break;
+            }
+
+            $chunk = substr($content, $pos, $bin['size']);
+
+            if ($bin['hash'] !== hash('sha256', $chunk, true)) {
+                throw new ChunkException(sprintf(
+                    'chunk hash of index %s did not match, %s != %s',
+                    $bin['index'],
+                    bin2hex($bin['hash']),
+                    bin2hex(hash('sha256', $chunk, true))
+                ));
+            }
+
+            $pos += $bin['size'];
+            $buf .= $chunk;
+        }
+
+        if ($this->header->hasCompression() && false === $buf = gzdecode($buf)) {
+            throw new KeePassException('could not decompress data');
+        }
+
+        $stream = new TempStream();
+        $stream->write($buf);
+        $stream->rewind();
+        $file->close();
+        return $stream;
+    }
+
+    /**
+     * return a helper that hold all offsets of
+     * Meta, Group en Entry elements. For the
+     * Group and Entry it will also hold the
+     * uuid and name that can be used for quick
+     * lookup of data.
+     *
+     * @return XmlIndex
+     */
+    public function getIndex()
+    {
+        $indexer = new XmlIndex();
+        $this->parse(new IndexParser($indexer));
+        return $indexer;
+    }
+
+    /**
+     * @return Meta
+     */
+    public function getMeta()
+    {
+        $meta = new Meta();
+        $this->parse(
+            new MetaElementParser($meta),
+            new CustomIconsElementParser(),
+            new BinariesElementParser(),
+            new MemoryProtectionElementParser()
+        );
+        return $meta;
+    }
+
+    /**
+     * will get a list of protected values from the xml
+     *
+     * @return array
+     */
+    public function getList()
+    {
+        $list = [];
+        $parser = new XmlParser(new XmlPath(), new StringElementParser($list));
+        while ($data = $this->tree->read(1024)) {
+            $parser->parse($data, true);
+        }
+        $this->tree->rewind();
+        return $list;
+    }
+
+    /**
+     * decrypt the the given list
+     *
+     * @param array $list
+     */
+    public function unlock(array &$list)
+    {
+        $cypher = $this->salsa;
+        foreach ($list as &$value) {
+            $value = $cypher(base64_decode($value));
+        }
+        $cypher->reset();
+    }
+
+    /**
+     * @param array|null $list
+     * @param int|null $maxdepth
+     * @return Group
+     */
+    public function getTree(array &$list = null, $maxdepth = null)
+    {
+
+        if (is_null($list)) {
+            $list = [];
+        }
+
+        $collection = new Group();
+        $this->parse(
+            new GroupElementParser($collection, $maxdepth),
+            new TimesElementParser(),
+            new EntryElementParser(),
+            new StringElementParser($list)
+        );
+
+        return $collection;
+    }
+
+    /**
+     * @param XmlElementParserInterface[] ...$elements
+     */
+    protected function parse(XmlElementParserInterface ...$elements)
+    {
+        $parser = new XmlParser(new XmlPath(), ...$elements);
+        while ($data = $this->tree->read(1024)) {
+            if (XmlParserState::STATE_FINISHED === $parser->parse($data)) {
+                break;
+            }
+        }
+        $this->tree->rewind();
     }
 }

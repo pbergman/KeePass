@@ -5,14 +5,13 @@
  */
 namespace PBergman\KeePass\Stream;
 
-class TempStream extends ResourceStream
+class MemoryStream extends ResourceStream
 {
     /**
-     * TempStream constructor.
+     * MemoryStream constructor.
      */
     public function __construct()
     {
-        parent::__construct(fopen('php://temp', 'r+'));
+        parent::__construct( fopen('php://memory', 'r+'));
     }
-
 }
